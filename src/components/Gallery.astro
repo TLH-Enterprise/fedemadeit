@@ -1,5 +1,6 @@
 ---
 import type { MediaItem, Session } from "../data/portfolio";
+import { Image } from "astro:assets";
 
 interface Props {
 	items: MediaItem[];
@@ -43,7 +44,10 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 										playsinline
 										preload="metadata"
 										title={item.title || "Video"}
-									/>
+										aria-label={item.title ? `Video: ${item.title}. Controles de reproducción.` : "Video con controles de reproducción"}
+									>
+										<track kind="captions" src="/captions/empty.vtt" srclang="es" label="Español" default />
+									</video>
 								</div>
 								{item.title && <p class="card-title">{item.title}</p>}
 							</div>
@@ -54,10 +58,17 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 								data-photo-src={item.thumbnail}
 								data-photo-title={item.title}
 								data-photo-index={sessionPhotos.findIndex((p) => p.id === item.id)}
-								aria-label={`Ver ${item.title || "foto"} en grande`}
+								aria-label={item.title ? `Ver ${item.title} en grande` : "Ver foto en grande"}
 							>
 								<div class="card-thumb">
-									<img src={item.thumbnail} alt={item.title || "Proyecto"} loading="lazy" />
+									<Image
+										src={item.thumbnail}
+										alt={item.title || "Foto del portafolio"}
+										width={260}
+										height={462}
+										loading="lazy"
+										class="card-thumb-img"
+									/>
 								</div>
 								{item.title && <p class="card-title">{item.title}</p>}
 							</button>
@@ -79,7 +90,7 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 	</button>
 	<div class="lightbox-backdrop" data-lightbox-close></div>
 	<div class="lightbox-content">
-		<img class="lightbox-img" src="" alt="" data-lightbox-img />
+		<img class="lightbox-img" src="" alt="Vista ampliada de la foto del portafolio" data-lightbox-img />
 		<p class="lightbox-title" data-lightbox-title></p>
 		<p class="lightbox-counter" data-lightbox-counter></p>
 	</div>
@@ -171,6 +182,7 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 	}
 
 	.card-thumb img,
+	.card-thumb .card-thumb-img,
 	.card-thumb .card-video {
 		width: 100%;
 		height: 100%;

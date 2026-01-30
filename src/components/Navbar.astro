@@ -10,32 +10,32 @@ const { sessions, logoText = "FR" } = Astro.props;
 ---
 
 <header class="navbar">
-	<nav class="nav-inner">
-		<a href="/" class="logo" aria-label="Inicio">{logoText}</a>
+	<nav class="nav-inner" aria-label="Navegación principal">
+		<a href="/" class="logo" aria-label="Inicio - Página principal">{logoText}</a>
 		<ul class="nav-links">
 			<li class="nav-item dropdown">
-				<button type="button" class="nav-btn" aria-expanded="false" aria-haspopup="true" data-dropdown-trigger>
+				<button type="button" class="nav-btn" aria-expanded="false" aria-haspopup="true" aria-label="Abrir menú de sesiones" data-dropdown-trigger>
 					Sesiones
 				</button>
-				<ul class="dropdown-menu" aria-hidden="true">
+				<ul class="dropdown-menu" aria-hidden="true" aria-label="Sesiones del portafolio">
 					{sessions.map((session) => (
 						<li>
-							<a href={`#sesion-${session.id}`}>{session.name}</a>
+							<a href={`#sesion-${session.id}`} aria-label={`Ir a sección ${session.name}`}>{session.name}</a>
 						</li>
 					))}
 				</ul>
 			</li>
 			<li class="nav-item">
-				<a href="#galeria" class="nav-btn">Galería</a>
+				<a href="#galeria" class="nav-btn" aria-label="Ir a galería">Galería</a>
 			</li>
 			<li class="nav-item">
-				<a href="#contacto" class="nav-btn">Contacto</a>
+				<a href="#contacto" class="nav-btn" aria-label="Ir a contacto">Contacto</a>
 			</li>
 		</ul>
-		<button type="button" class="nav-toggle" aria-label="Abrir menú" data-nav-toggle>
-			<span></span>
-			<span></span>
-			<span></span>
+		<button type="button" class="nav-toggle" aria-label="Abrir menú de navegación" data-nav-toggle>
+			<span aria-hidden="true"></span>
+			<span aria-hidden="true"></span>
+			<span aria-hidden="true"></span>
 		</button>
 	</nav>
 </header>

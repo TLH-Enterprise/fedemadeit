@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Props {
 	name: string;
 	subtitle?: string;
@@ -22,7 +24,7 @@ const { name, subtitle = "Portafolio", image } = Astro.props;
 		</div>
 		{image && (
 			<div class="hero-image-wrap">
-				<img src={image} alt={name} class="hero-image" width="480" height="640" />
+				<Image src={image} alt={`${name}, portafolio`} class="hero-image" width={480} height={640} loading="eager" />
 			</div>
 		)}
 	</div>
