@@ -25,27 +25,31 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 			<div class="session-block" id={`sesion-${session.id}`}>
 				<h3 class="session-title">{session.name}</h3>
 				<div class={`grid ${isVertical ? "grid-vertical" : "grid-horizontal"}`}>
-					{sessionItems.map((item) => (
-						<a
-							href={item.videoUrl || item.thumbnail}
-							class="card"
-							target={item.videoUrl ? "_blank" : undefined}
-							rel={item.videoUrl ? "noopener noreferrer" : undefined}
-							data-type={item.type}
-						>
-							<div class="card-thumb">
-								<img src={item.thumbnail} alt={item.title || "Proyecto"} loading="lazy" />
-								{item.type === "video" && (
-									<span class="card-badge" aria-hidden="true">
-										<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-											<path d="M8 5v14l11-7z" />
-										</svg>
-									</span>
-								)}
+					{sessionItems.map((item) =>
+						item.type === "video" && item.videoUrl ? (
+							<div class="card">
+								<div class="card-thumb">
+									<video
+										class="card-video"
+										poster={item.thumbnail}
+										src={item.videoUrl}
+										controls
+										playsinline
+										preload="metadata"
+										title={item.title || "Video"}
+									/>
+								</div>
+								{item.title && <p class="card-title">{item.title}</p>}
 							</div>
-							{item.title && <p class="card-title">{item.title}</p>}
-						</a>
-					))}
+						) : (
+							<a href={item.thumbnail} class="card" target="_blank" rel="noopener noreferrer">
+								<div class="card-thumb">
+									<img src={item.thumbnail} alt={item.title || "Proyecto"} loading="lazy" />
+								</div>
+								{item.title && <p class="card-title">{item.title}</p>}
+							</a>
+						)
+					)}
 				</div>
 			</div>
 		);
@@ -131,24 +135,16 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		aspect-ratio: 16/10;
 	}
 
-	.card-thumb img {
+	.card-thumb img,
+	.card-thumb .card-video {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		display: block;
 	}
 
-	.card-badge {
-		position: absolute;
-		bottom: 0.75rem;
-		left: 0.75rem;
-		width: 40px;
-		height: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.7);
-		color: var(--text-primary);
-		border-radius: 50%;
+	.card-video {
+		background: #000;
 	}
 
 	.card-title {

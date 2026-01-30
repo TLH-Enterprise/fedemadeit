@@ -61,8 +61,8 @@ export const portfolioItems: MediaItem[] = [
 	{
 		id: "1",
 		title: "Proyecto YouTube",
-		thumbnail: "https://placehold.co/400x600/1a1a1a/4fc3f7?text=Video+1",
-		videoUrl: "#",
+		thumbnail: "/FedeVideo.mp4",
+		videoUrl: "/FedeVideo.mp4",
 		type: "video",
 		session: "vertical",
 	},
@@ -109,14 +109,14 @@ export const portfolioItems: MediaItem[] = [
 	{
 		id: "7",
 		title: "Foto 1",
-		thumbnail: "https://placehold.co/400x600/1a1a1a/4fc3f7?text=Foto+1",
+		thumbnail: "/FedeFoto1.jpg",
 		type: "photo",
 		session: "vertical",
 	},
 	{
 		id: "8",
 		title: "Foto 2",
-		thumbnail: "https://placehold.co/400x600/1a1a1a/69f0ae?text=Foto+2",
+		thumbnail: "/FedeFoto2.jpeg",
 		type: "photo",
 		session: "vertical",
 	},
