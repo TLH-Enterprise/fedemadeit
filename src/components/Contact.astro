@@ -1,0 +1,199 @@
+---
+import { programCategories } from "../data/portfolio";
+---
+
+<section class="contact-section" id="contacto">
+	<div class="contact-wrap">
+		<div class="contact-content">
+			<div class="programs-block">
+				<h3 class="programs-title">Manejo de programas</h3>
+				{programCategories.map((cat) => (
+					<div class="programs-category">
+						<p class="programs-category-title">{cat.title}</p>
+						<div class="programs-icons">
+							{cat.programs.map((prog) => (
+								<div
+									class="program-icon"
+									style={`--program-color: ${prog.color}`}
+									title={prog.name}
+								>
+									{prog.abbr}
+								</div>
+							))}
+						</div>
+					</div>
+				))}
+			</div>
+
+			<div class="contact-block">
+				<h2 class="contact-title">Contacto</h2>
+				<p class="contact-text">¿Tienes un proyecto en mente? Escríbeme.</p>
+				<div class="contact-links">
+					<a href="mailto:hola@federfilms.com" class="contact-btn">Email</a>
+					<a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="contact-btn">Instagram</a>
+					<a href="https://vimeo.com" target="_blank" rel="noopener noreferrer" class="contact-btn">Vimeo</a>
+				</div>
+			</div>
+		</div>
+		<div class="contact-diagonal" aria-hidden="true"></div>
+	</div>
+</section>
+
+<style>
+	.contact-section {
+		position: relative;
+		background: var(--bg-card);
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.contact-wrap {
+		position: relative;
+		max-width: 1200px;
+		margin: 0 auto;
+		min-height: 420px;
+	}
+
+	.contact-content {
+		position: relative;
+		z-index: 1;
+		padding: 4rem 1.5rem 4rem 2.5rem;
+		max-width: 55%;
+	}
+
+	.contact-block {
+		margin-bottom: 2.5rem;
+	}
+
+	.contact-title {
+		font-family: var(--font-display);
+		font-size: 1.75rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		margin-bottom: 0.5rem;
+		color: var(--text-primary);
+	}
+
+	.contact-text {
+		color: var(--text-muted);
+		margin-bottom: 1.5rem;
+	}
+
+	.contact-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.contact-btn {
+		display: inline-block;
+		font-family: var(--font-body);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		padding: 0.6rem 1.25rem;
+		background: var(--accent-blue);
+		color: var(--bg-dark);
+		border-radius: 6px;
+		transition: transform 0.2s, box-shadow 0.2s;
+	}
+
+	.contact-btn:hover {
+		transform: scale(1.03);
+		box-shadow: 0 0 20px rgba(79, 195, 247, 0.4);
+	}
+
+	.programs-block {
+		margin-bottom: 2.5rem;
+	}
+
+	.programs-title {
+		font-family: var(--font-display);
+		font-size: 1.35rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-primary);
+		margin-bottom: 1.25rem;
+	}
+
+	.programs-category {
+		margin-bottom: 1.25rem;
+	}
+
+	.programs-category:last-child {
+		margin-bottom: 0;
+	}
+
+	.programs-category-title {
+		font-family: var(--font-body);
+		font-size: 0.95rem;
+		font-weight: 500;
+		color: var(--text-muted);
+		margin-bottom: 0.6rem;
+	}
+
+	.programs-icons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.program-icon {
+		width: 52px;
+		height: 52px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--program-color);
+		color: white;
+		font-family: var(--font-body);
+		font-size: 0.9rem;
+		font-weight: 700;
+		border-radius: 8px;
+		transition: transform 0.2s, box-shadow 0.2s;
+	}
+
+	.program-icon:hover {
+		transform: scale(1.05);
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+	}
+
+	.contact-diagonal {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 55%;
+		height: 100%;
+		background: var(--bg-dark);
+		clip-path: polygon(35% 0, 100% 0, 100% 100%, 0% 100%);
+		z-index: 0;
+	}
+
+	@media (max-width: 768px) {
+		.contact-content {
+			max-width: 100%;
+			padding: 3rem 1.5rem;
+		}
+
+		.contact-diagonal {
+			display: none;
+		}
+
+		.contact-content {
+			text-align: center;
+		}
+
+		.contact-links {
+			justify-content: center;
+		}
+
+		.programs-block {
+			text-align: left;
+		}
+
+		.programs-icons {
+			justify-content: center;
+		}
+	}
+</style>
