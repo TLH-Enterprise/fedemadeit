@@ -19,8 +19,14 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 
 	{sessions.map((session) => {
 		const sessionItems = getItemsBySession(items, session.id);
+		const sessionPhotos = sessionItems.filter((i) => i.type === "photo");
+		const photosList = sessionPhotos.map((p) => ({ src: p.thumbnail, title: p.title || "Foto" }));
 		return (
-			<div class="session-block" id={`sesion-${session.id}`}>
+			<div
+				class="session-block"
+				id={`sesion-${session.id}`}
+				data-photos={JSON.stringify(photosList)}
+			>
 				<h3 class="session-title">{session.name}</h3>
 				<div class="grid grid-vertical">
 					{sessionItems.length === 0 ? (
@@ -42,12 +48,19 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 								{item.title && <p class="card-title">{item.title}</p>}
 							</div>
 						) : (
-							<a href={item.thumbnail} class="card" target="_blank" rel="noopener noreferrer">
+							<button
+								type="button"
+								class="card card-photo"
+								data-photo-src={item.thumbnail}
+								data-photo-title={item.title}
+								data-photo-index={sessionPhotos.findIndex((p) => p.id === item.id)}
+								aria-label={`Ver ${item.title || "foto"} en grande`}
+							>
 								<div class="card-thumb">
 									<img src={item.thumbnail} alt={item.title || "Proyecto"} loading="lazy" />
 								</div>
 								{item.title && <p class="card-title">{item.title}</p>}
-							</a>
+							</button>
 						)
 					)}
 				</div>
@@ -55,6 +68,22 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		);
 	})}
 </section>
+
+<div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Ver foto">
+	<button type="button" class="lightbox-close" aria-label="Cerrar" data-lightbox-close>×</button>
+	<button type="button" class="lightbox-prev" aria-label="Foto anterior" data-lightbox-prev>
+		<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+	</button>
+	<button type="button" class="lightbox-next" aria-label="Foto siguiente" data-lightbox-next>
+		<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+	</button>
+	<div class="lightbox-backdrop" data-lightbox-close></div>
+	<div class="lightbox-content">
+		<img class="lightbox-img" src="" alt="" data-lightbox-img />
+		<p class="lightbox-title" data-lightbox-title></p>
+		<p class="lightbox-counter" data-lightbox-counter></p>
+	</div>
+</div>
 
 <style>
 	.gallery-section {
@@ -160,6 +189,132 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		color: var(--text-muted);
 	}
 
+	.card-photo {
+		width: 100%;
+		text-align: left;
+		cursor: pointer;
+		font: inherit;
+		color: inherit;
+		border: none;
+		background: none;
+		padding: 0;
+	}
+
+	/* Lightbox */
+	.lightbox {
+		position: fixed;
+		inset: 0;
+		z-index: 200;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 3rem 4rem;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.25s, visibility 0.25s;
+	}
+
+	.lightbox.is-open {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	.lightbox-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.92);
+		cursor: pointer;
+	}
+
+	.lightbox-content {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		max-width: 95vw;
+		max-height: 90vh;
+	}
+
+	.lightbox-img {
+		max-width: 100%;
+		max-height: 80vh;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		border-radius: 8px;
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+	}
+
+	.lightbox-title {
+		margin-top: 1rem;
+		font-size: 1rem;
+		font-weight: 500;
+		color: var(--text-primary);
+	}
+
+	.lightbox-counter {
+		margin-top: 0.25rem;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+	}
+
+	.lightbox-close {
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+		z-index: 3;
+		width: 48px;
+		height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 2rem;
+		line-height: 1;
+		color: var(--text-primary);
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.lightbox-close:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	.lightbox-prev,
+	.lightbox-next {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		z-index: 3;
+		width: 52px;
+		height: 52px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-primary);
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.lightbox-prev {
+		left: 1.5rem;
+	}
+
+	.lightbox-next {
+		right: 1.5rem;
+	}
+
+	.lightbox-prev:hover,
+	.lightbox-next:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+
 	@media (max-width: 600px) {
 		.grid-vertical {
 			grid-template-columns: repeat(2, 1fr);
@@ -169,5 +324,102 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		.grid-horizontal {
 			grid-template-columns: 1fr;
 		}
+
+		.lightbox {
+			padding: 2rem 1rem;
+		}
+
+		.lightbox-prev {
+			left: 0.5rem;
+		}
+
+		.lightbox-next {
+			right: 0.5rem;
+		}
+
+		.lightbox-close {
+			top: 0.75rem;
+			right: 0.75rem;
+		}
 	}
 </style>
+
+<script>
+	const lightbox = document.getElementById("lightbox");
+	const lightboxImg = document.querySelector("[data-lightbox-img]");
+	const lightboxTitle = document.querySelector("[data-lightbox-title]");
+	const lightboxCounter = document.querySelector("[data-lightbox-counter]");
+	const closeTriggers = document.querySelectorAll("[data-lightbox-close]");
+	const prevBtn = document.querySelector("[data-lightbox-prev]");
+	const nextBtn = document.querySelector("[data-lightbox-next]");
+
+	let photos: { src: string; title: string }[] = [];
+	let currentIndex = 0;
+
+	function openLightbox(photosList: { src: string; title: string }[], index: number) {
+		photos = photosList;
+		currentIndex = index;
+		updateLightboxImage();
+		if (lightbox) {
+			lightbox.classList.add("is-open");
+			lightbox.setAttribute("aria-hidden", "false");
+			document.body.style.overflow = "hidden";
+		}
+		prevBtn?.setAttribute("aria-hidden", photos.length <= 1 ? "true" : "false");
+		nextBtn?.setAttribute("aria-hidden", photos.length <= 1 ? "true" : "false");
+	}
+
+	function closeLightbox() {
+		if (lightbox) {
+			lightbox.classList.remove("is-open");
+			lightbox.setAttribute("aria-hidden", "true");
+			document.body.style.overflow = "";
+		}
+	}
+
+	function updateLightboxImage() {
+		if (!photos.length || !lightboxImg) return;
+		const photo = photos[currentIndex];
+		(lightboxImg as HTMLImageElement).src = photo.src;
+		(lightboxImg as HTMLImageElement).alt = photo.title;
+		if (lightboxTitle) lightboxTitle.textContent = photo.title;
+		if (lightboxCounter) lightboxCounter.textContent = `${currentIndex + 1} / ${photos.length}`;
+	}
+
+	function goPrev() {
+		if (photos.length <= 1) return;
+		currentIndex = currentIndex === 0 ? photos.length - 1 : currentIndex - 1;
+		updateLightboxImage();
+	}
+
+	function goNext() {
+		if (photos.length <= 1) return;
+		currentIndex = currentIndex === photos.length - 1 ? 0 : currentIndex + 1;
+		updateLightboxImage();
+	}
+
+	document.querySelectorAll(".card-photo").forEach((btn) => {
+		btn.addEventListener("click", () => {
+			const sessionBlock = btn.closest(".session-block");
+			const photosJson = sessionBlock?.getAttribute("data-photos");
+			if (!photosJson) return;
+			const photosList = JSON.parse(photosJson) as { src: string; title: string }[];
+			const index = parseInt(btn.getAttribute("data-photo-index") ?? "0", 10);
+			openLightbox(photosList, index);
+		});
+	});
+
+	closeTriggers.forEach((el) => el.addEventListener("click", closeLightbox));
+	prevBtn?.addEventListener("click", goPrev);
+	nextBtn?.addEventListener("click", goNext);
+
+	lightbox?.addEventListener("click", (e) => {
+		if (e.target === lightbox) closeLightbox();
+	});
+
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape" && lightbox?.classList.contains("is-open")) closeLightbox();
+		if (e.key === "ArrowLeft" && lightbox?.classList.contains("is-open")) goPrev();
+		if (e.key === "ArrowRight" && lightbox?.classList.contains("is-open")) goNext();
+	});
+</script>
