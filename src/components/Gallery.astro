@@ -19,13 +19,13 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 
 	{sessions.map((session) => {
 		const sessionItems = getItemsBySession(items, session.id);
-		if (sessionItems.length === 0) return null;
-		const isVertical = session.id === "vertical";
 		return (
 			<div class="session-block" id={`sesion-${session.id}`}>
 				<h3 class="session-title">{session.name}</h3>
-				<div class={`grid ${isVertical ? "grid-vertical" : "grid-horizontal"}`}>
-					{sessionItems.map((item) =>
+				<div class="grid grid-vertical">
+					{sessionItems.length === 0 ? (
+						<p class="session-empty">Próximamente</p>
+					) : sessionItems.map((item) =>
 						item.type === "video" && item.videoUrl ? (
 							<div class="card">
 								<div class="card-thumb">
@@ -98,13 +98,19 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
+	.session-empty {
+		color: var(--text-muted);
+		font-size: 0.95rem;
+		padding: 1rem 0;
+	}
+
 	.grid {
 		display: grid;
-		gap: 1.25rem;
+		gap: 1.5rem;
 	}
 
 	.grid-vertical {
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 	}
 
 	.grid-horizontal {

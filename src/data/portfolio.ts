@@ -26,10 +26,11 @@ export interface Program {
 }
 
 export const sessions: Session[] = [
-	{ id: "vertical", name: "Formato Vertical" },
-	{ id: "horizontal", name: "Formato Horizontal" },
-	{ id: "comercial", name: "Comercial" },
-	{ id: "eventos", name: "Eventos" },
+	{ id: "eventos-corporativos", name: "Eventos Corporativos" },
+	{ id: "moda-marcas", name: "Moda y marcas" },
+	{ id: "djs-videos-musicales", name: "Djs y Videos Musicales" },
+	{ id: "contenido-marca", name: "Contenido de marca" },
+	{ id: "edicion-videos", name: "Edición de videos" },
 ];
 
 /** Programas que usas, agrupados por categoría */
@@ -56,15 +57,15 @@ export const programCategories: { title: string; programs: Program[] }[] = [
 	},
 ];
 
-/** Videos y fotos del portafolio. Añade tus URLs de thumbnail y video. */
+/** Videos y fotos del portafolio. session debe coincidir con el id de una sesión arriba. */
 export const portfolioItems: MediaItem[] = [
 	{
 		id: "1",
-		title: "Proyecto YouTube",
-		thumbnail: "/FedeVideo.mp4",
+		title: "Video",
+		thumbnail: "/FedeFoto2.jpeg",
 		videoUrl: "/FedeVideo.mp4",
 		type: "video",
-		session: "vertical",
+		session: "edicion-videos",
 	},
 	{
 		id: "2",
@@ -72,7 +73,7 @@ export const portfolioItems: MediaItem[] = [
 		thumbnail: "https://placehold.co/400x600/1a1a1a/69f0ae?text=Video+2",
 		videoUrl: "#",
 		type: "video",
-		session: "vertical",
+		session: "contenido-marca",
 	},
 	{
 		id: "3",
@@ -80,7 +81,7 @@ export const portfolioItems: MediaItem[] = [
 		thumbnail: "https://placehold.co/400x600/1a1a1a/ffd54f?text=Video+3",
 		videoUrl: "#",
 		type: "video",
-		session: "vertical",
+		session: "eventos-corporativos",
 	},
 	{
 		id: "4",
@@ -88,7 +89,7 @@ export const portfolioItems: MediaItem[] = [
 		thumbnail: "https://placehold.co/400x600/1a1a1a/4fc3f7?text=Video+4",
 		videoUrl: "#",
 		type: "video",
-		session: "vertical",
+		session: "moda-marcas",
 	},
 	{
 		id: "5",
@@ -96,7 +97,7 @@ export const portfolioItems: MediaItem[] = [
 		thumbnail: "https://placehold.co/600x400/1a1a1a/69f0ae?text=Horizontal+1",
 		videoUrl: "#",
 		type: "video",
-		session: "horizontal",
+		session: "eventos-corporativos",
 	},
 	{
 		id: "6",
@@ -104,20 +105,20 @@ export const portfolioItems: MediaItem[] = [
 		thumbnail: "https://placehold.co/600x400/1a1a1a/ffd54f?text=Horizontal+2",
 		videoUrl: "#",
 		type: "video",
-		session: "horizontal",
+		session: "moda-marcas",
 	},
 	{
 		id: "7",
 		title: "Foto 1",
 		thumbnail: "/FedeFoto1.jpg",
 		type: "photo",
-		session: "vertical",
+		session: "edicion-videos",
 	},
 	{
 		id: "8",
 		title: "Foto 2",
 		thumbnail: "/FedeFoto2.jpeg",
 		type: "photo",
-		session: "vertical",
+		session: "edicion-videos",
 	},
 ];
