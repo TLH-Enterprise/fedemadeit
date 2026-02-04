@@ -64,7 +64,7 @@ export const programCategories: { title: string; programs: Program[] }[] = [
 
 /** Videos y fotos del portafolio. session debe coincidir con el id de una sesión arriba.
  * Fotos: imageAsset = ruta WebP en src/assets/portfolio/.
- * Videos: videoUrl = URL del CDN; thumbnail = URL del poster (opcional). */
+ * Videos: videoUrl = URL directa (MP4, etc.) o URL de YouTube (watch?v=ID o youtu.be/ID). thumbnail = poster opcional. */
 export const portfolioItems: MediaItem[] = [
 	{
 		id: "ec-1",
@@ -243,22 +243,22 @@ export const portfolioItems: MediaItem[] = [
 	},
 	{
 		id: "cm-1",
-		title: "Contenido de marca",
-		videoUrl: "",
+		title: "Lava Express",
+		videoUrl: "https://www.youtube.com/shorts/FETLrvFdYBA",
 		type: "video",
 		session: "contenido-marca",
 	},
 	{
 		id: "cm-2",
-		title: "Contenido de marca",
-		videoUrl: "",
+		title: "Servi Express",
+		videoUrl: "https://www.youtube.com/shorts/ffP9fjh5a7w",
 		type: "video",
 		session: "contenido-marca",
 	},
 	{
 		id: "cm-3",
-		title: "Contenido de marca",
-		videoUrl: "",
+		title: "Choris Grill Amor y Amistad",
+		videoUrl: "https://www.youtube.com/shorts/WVJsHPr_42k",
 		type: "video",
 		session: "contenido-marca",
 	},

@@ -26,7 +26,23 @@ function getImageModule(assetKey: string) {
 	return key ? (imageModules[key] as { default: import("astro").ImageMetadata }).default : undefined;
 }
 
-type MediaEntry = { type: "photo"; src: string; title: string } | { type: "video"; src: string; title: string; poster?: string };
+function getYoutubeId(url: string): string | null {
+	if (!url || typeof url !== "string") return null;
+	const t = url.trim();
+	if (/^[a-zA-Z0-9_-]{11}$/.test(t)) return t;
+	const m = t.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+	return m ? m[1] : null;
+}
+function getYoutubeEmbedUrl(id: string) {
+	return `https://www.youtube.com/embed/${id}?autoplay=1`;
+}
+function getYoutubeThumbnail(id: string) {
+	return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+}
+
+type MediaEntry =
+	| { type: "photo"; src: string; title: string }
+	| { type: "video"; src: string; title: string; poster?: string; isYoutube?: boolean };
 
 const sessionData = await Promise.all(
 	sessions.map(async (session) => {
@@ -40,12 +56,24 @@ const sessionData = await Promise.all(
 				return { type: "photo" as const, src, title: p.title || "Foto" };
 			})
 		);
-		const videosList: MediaEntry[] = sessionVideos.map((v) => ({
-			type: "video" as const,
-			src: v.videoUrl!,
-			title: v.title || "Video",
-			poster: v.thumbnail,
-		}));
+		const videosList: MediaEntry[] = sessionVideos.map((v) => {
+			const ytId = getYoutubeId(v.videoUrl!);
+			if (ytId) {
+				return {
+					type: "video" as const,
+					src: getYoutubeEmbedUrl(ytId),
+					title: v.title || "Video",
+					poster: getYoutubeThumbnail(ytId),
+					isYoutube: true,
+				};
+			}
+			return {
+				type: "video" as const,
+				src: v.videoUrl!,
+				title: v.title || "Video",
+				poster: v.thumbnail,
+			};
+		});
 		const allMediaList = [...videosList, ...photosList];
 		return { session, sessionItems, allMediaList };
 	})
@@ -54,14 +82,14 @@ const sessionData = await Promise.all(
 
 <section class="gallery-section" id="galeria">
 	<h2 class="section-title">Portafolio de trabajo</h2>
-	<p class="section-subtitle script">Federico Rios</p>
+	<p class="section-subtitle script">Federico Ríos</p>
 
 	{sessionData.map(({ session, sessionItems, allMediaList }) => {
 		const sessionVideos = sessionItems.filter((i) => i.type === "video" && i.videoUrl);
 		const sessionPhotos = sessionItems.filter((i): i is MediaItem & { imageAsset: string } => i.type === "photo" && !!i.imageAsset);
 		const getMediaIndex = (item: MediaItem) =>
 			item.type === "video" && item.videoUrl
-				? allMediaList.findIndex((m) => m.type === "video" && m.src === item.videoUrl)
+				? sessionVideos.findIndex((v) => v.id === item.id)
 				: sessionVideos.length + sessionPhotos.findIndex((p) => p.id === item.id);
 		return (
 			<div
@@ -75,33 +103,60 @@ const sessionData = await Promise.all(
 						<p class="session-empty">Próximamente</p>
 					) : sessionItems.map((item) =>
 						item.type === "video" && item.videoUrl ? (
-							<button
-								type="button"
-								class="card card-video-btn"
-								data-media-index={getMediaIndex(item)}
-								aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
-							>
-								<div class="card-thumb">
-									<video
-										class="card-video-preview"
-										{...(item.thumbnail && !item.thumbnail.endsWith(".mp4") && !item.thumbnail.endsWith(".mov") ? { poster: item.thumbnail } : {})}
-										src={item.videoUrl}
-										muted
-										autoplay
-										loop
-										playsinline
-										webkit-playsinline="true"
-										preload="metadata"
-										aria-hidden="true"
-									></video>
-									<span class="card-badge" aria-hidden="true">
-										<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-											<path d="M8 5v14l11-7z" />
-										</svg>
-									</span>
-								</div>
-								{item.title && <p class="card-title">{item.title}</p>}
-							</button>
+							getYoutubeId(item.videoUrl) ? (
+								<button
+									type="button"
+									class="card card-video-btn"
+									data-media-index={getMediaIndex(item)}
+									aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
+								>
+									<div class="card-thumb">
+										<img
+											class="card-video-preview"
+											src={getYoutubeThumbnail(getYoutubeId(item.videoUrl)!)}
+											alt=""
+											width={1040}
+											height={1848}
+											loading="lazy"
+											fetchpriority="low"
+										/>
+										<span class="card-badge" aria-hidden="true">
+											<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+												<path d="M8 5v14l11-7z" />
+											</svg>
+										</span>
+									</div>
+									{item.title && <p class="card-title">{item.title}</p>}
+								</button>
+							) : (
+								<button
+									type="button"
+									class="card card-video-btn"
+									data-media-index={getMediaIndex(item)}
+									aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
+								>
+									<div class="card-thumb">
+										<video
+											class="card-video-preview"
+											{...(item.thumbnail && !item.thumbnail.endsWith(".mp4") && !item.thumbnail.endsWith(".mov") ? { poster: item.thumbnail } : {})}
+											src={item.videoUrl}
+											muted
+											autoplay
+											loop
+											playsinline
+											webkit-playsinline="true"
+											preload="metadata"
+											aria-hidden="true"
+										></video>
+										<span class="card-badge" aria-hidden="true">
+											<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+												<path d="M8 5v14l11-7z" />
+											</svg>
+										</span>
+									</div>
+									{item.title && <p class="card-title">{item.title}</p>}
+								</button>
+							)
 						) : item.type === "photo" && item.imageAsset ? (
 							(() => {
 								const mod = getImageModule(item.imageAsset);
@@ -155,6 +210,7 @@ const sessionData = await Promise.all(
 		<video class="media-modal-video" controls playsinline preload="auto" autoplay data-media-modal-video>
 			<track kind="captions" src="/captions/empty.vtt" srclang="es" label="Español" default />
 		</video>
+		<iframe class="media-modal-youtube" data-media-modal-youtube title="Reproducir video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		<p class="media-modal-title" data-media-modal-title></p>
 		<p class="media-modal-counter" data-media-modal-counter></p>
 	</div>
@@ -325,15 +381,15 @@ const sessionData = await Promise.all(
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		max-width: 95vw;
-		max-height: 90vh;
+		max-width: 96vw;
+		max-height: 92vh;
 	}
 
 	.media-modal-img,
-	.media-modal-video {
+	.media-modal-video,
+	.media-modal-youtube {
 		max-width: 100%;
-		max-height: 80vh;
-		width: auto;
+		width: 100%;
 		height: auto;
 		border-radius: 8px;
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -342,10 +398,22 @@ const sessionData = await Promise.all(
 
 	.media-modal-img {
 		object-fit: contain;
+		aspect-ratio: auto;
+		max-height: 88vh;
 	}
 
 	.media-modal-video {
 		background: #000;
+		aspect-ratio: auto;
+		max-height: 88vh;
+	}
+
+	.media-modal-youtube {
+		aspect-ratio: 9 / 16;
+		min-height: 70vh;
+		max-height: 85vh;
+		width: auto;
+		max-width: min(96vw, calc(85vh * 9 / 16));
 	}
 
 	.media-modal.show-image .media-modal-img {
@@ -353,6 +421,10 @@ const sessionData = await Promise.all(
 	}
 
 	.media-modal.show-video .media-modal-video {
+		display: block;
+	}
+
+	.media-modal.show-youtube .media-modal-youtube {
 		display: block;
 	}
 
@@ -456,7 +528,7 @@ const sessionData = await Promise.all(
 
 <script>
 	// Unified Media Modal (for both photos and videos)
-	type MediaItem = { type: "photo" | "video"; src: string; title: string; poster?: string };
+	type MediaItem = { type: "photo" | "video"; src: string; title: string; poster?: string; isYoutube?: boolean };
 
 	const mediaModal = document.getElementById("media-modal");
 	const mediaImg = document.querySelector("[data-media-modal-img]") as HTMLImageElement;
@@ -483,6 +555,8 @@ const sessionData = await Promise.all(
 		nextBtn?.setAttribute("aria-hidden", mediaItems.length <= 1 ? "true" : "false");
 	}
 
+	const mediaYoutube = document.querySelector("[data-media-modal-youtube]") as HTMLIFrameElement | null;
+
 	function closeMediaModal() {
 		if (mediaModal) {
 			if (mediaVideo) {
@@ -490,7 +564,8 @@ const sessionData = await Promise.all(
 				mediaVideo.removeAttribute("src");
 				mediaVideo.load();
 			}
-			mediaModal.classList.remove("is-open", "show-image", "show-video");
+			if (mediaYoutube) mediaYoutube.removeAttribute("src");
+			mediaModal.classList.remove("is-open", "show-image", "show-video", "show-youtube");
 			mediaModal.setAttribute("aria-hidden", "true");
 			document.body.style.overflow = "";
 		}
@@ -501,27 +576,31 @@ const sessionData = await Promise.all(
 		const item = mediaItems[currentMediaIndex];
 
 		// Remove previous type classes
-		mediaModal.classList.remove("show-image", "show-video");
+		mediaModal.classList.remove("show-image", "show-video", "show-youtube");
 
 		if (item.type === "photo") {
 			mediaImg.src = item.src;
 			mediaImg.alt = item.title || "Vista ampliada de la foto del portafolio";
 			mediaModal.classList.add("show-image");
-			if (mediaVideo) {
-				mediaVideo.pause();
-			}
+			if (mediaVideo) mediaVideo.pause();
+			if (mediaYoutube) mediaYoutube.removeAttribute("src");
 		} else if (item.type === "video") {
-			mediaVideo.src = item.src;
-			if (item.poster) {
-				mediaVideo.poster = item.poster;
+			if (item.isYoutube && mediaYoutube) {
+				mediaYoutube.src = item.src;
+				mediaModal.classList.add("show-youtube");
+				if (mediaVideo) mediaVideo.pause();
 			} else {
-				mediaVideo.removeAttribute("poster");
+				mediaVideo!.src = item.src;
+				if (item.poster) {
+					mediaVideo!.setAttribute("poster", item.poster);
+				} else {
+					mediaVideo!.removeAttribute("poster");
+				}
+				mediaVideo!.load();
+				mediaVideo!.play().catch(() => {});
+				mediaModal.classList.add("show-video");
+				if (mediaYoutube) mediaYoutube.removeAttribute("src");
 			}
-			mediaVideo.load();
-			mediaVideo.play().catch(() => {
-				// Autoplay might fail due to browser policies
-			});
-			mediaModal.classList.add("show-video");
 		}
 
 		if (mediaTitle) mediaTitle.textContent = item.title;
@@ -566,8 +645,8 @@ const sessionData = await Promise.all(
 		if (e.key === "ArrowRight" && mediaModal?.classList.contains("is-open")) goNext();
 	});
 
-	// Autoplay videos in cards when they enter viewport (Safari-compatible)
-	const videoPreviewElements = document.querySelectorAll(".card-video-preview");
+	// Autoplay native videos in cards when they enter viewport (skip YouTube thumbnails)
+	const videoPreviewElements = document.querySelectorAll("video.card-video-preview");
 
 	// Helper function for Safari compatibility
 	function playVideo(video: HTMLVideoElement) {
