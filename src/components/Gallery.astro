@@ -42,7 +42,7 @@ function getYoutubeThumbnail(id: string) {
 
 type MediaEntry =
 	| { type: "photo"; src: string; title: string }
-	| { type: "video"; src: string; title: string; poster?: string; isYoutube?: boolean };
+	| { type: "video"; src: string; title: string; poster?: string; isYoutube?: boolean; isShort?: boolean };
 
 const sessionData = await Promise.all(
 	sessions.map(async (session) => {
@@ -59,12 +59,14 @@ const sessionData = await Promise.all(
 		const videosList: MediaEntry[] = sessionVideos.map((v) => {
 			const ytId = getYoutubeId(v.videoUrl!);
 			if (ytId) {
+				const isShort = v.videoUrl!.includes("/shorts/");
 				return {
 					type: "video" as const,
 					src: getYoutubeEmbedUrl(ytId),
 					title: v.title || "Video",
 					poster: getYoutubeThumbnail(ytId),
 					isYoutube: true,
+					isShort,
 				};
 			}
 			return {
@@ -381,8 +383,8 @@ const sessionData = await Promise.all(
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		max-width: 96vw;
-		max-height: 92vh;
+		max-width: 98vw;
+		max-height: 95vh;
 	}
 
 	.media-modal-img,
@@ -399,21 +401,29 @@ const sessionData = await Promise.all(
 	.media-modal-img {
 		object-fit: contain;
 		aspect-ratio: auto;
-		max-height: 88vh;
+		max-height: 92vh;
 	}
 
 	.media-modal-video {
 		background: #000;
 		aspect-ratio: auto;
-		max-height: 88vh;
+		max-height: 92vh;
 	}
 
 	.media-modal-youtube {
+		aspect-ratio: 16 / 9;
+		width: 100%;
+		max-width: 98vw;
+		max-height: 93vh;
+		min-height: 480px;
+	}
+
+	.media-modal.show-youtube-short .media-modal-youtube {
 		aspect-ratio: 9 / 16;
-		min-height: 70vh;
-		max-height: 85vh;
 		width: auto;
-		max-width: min(96vw, calc(85vh * 9 / 16));
+		min-height: 82vh;
+		max-height: 92vh;
+		max-width: min(98vw, calc(92vh * 9 / 16));
 	}
 
 	.media-modal.show-image .media-modal-img {
@@ -528,7 +538,7 @@ const sessionData = await Promise.all(
 
 <script>
 	// Unified Media Modal (for both photos and videos)
-	type MediaItem = { type: "photo" | "video"; src: string; title: string; poster?: string; isYoutube?: boolean };
+	type MediaItem = { type: "photo" | "video"; src: string; title: string; poster?: string; isYoutube?: boolean; isShort?: boolean };
 
 	const mediaModal = document.getElementById("media-modal");
 	const mediaImg = document.querySelector("[data-media-modal-img]") as HTMLImageElement;
@@ -565,7 +575,7 @@ const sessionData = await Promise.all(
 				mediaVideo.load();
 			}
 			if (mediaYoutube) mediaYoutube.removeAttribute("src");
-			mediaModal.classList.remove("is-open", "show-image", "show-video", "show-youtube");
+			mediaModal.classList.remove("is-open", "show-image", "show-video", "show-youtube", "show-youtube-short");
 			mediaModal.setAttribute("aria-hidden", "true");
 			document.body.style.overflow = "";
 		}
@@ -576,7 +586,7 @@ const sessionData = await Promise.all(
 		const item = mediaItems[currentMediaIndex];
 
 		// Remove previous type classes
-		mediaModal.classList.remove("show-image", "show-video", "show-youtube");
+		mediaModal.classList.remove("show-image", "show-video", "show-youtube", "show-youtube-short");
 
 		if (item.type === "photo") {
 			mediaImg.src = item.src;
@@ -588,6 +598,7 @@ const sessionData = await Promise.all(
 			if (item.isYoutube && mediaYoutube) {
 				mediaYoutube.src = item.src;
 				mediaModal.classList.add("show-youtube");
+				if (item.isShort) mediaModal.classList.add("show-youtube-short");
 				if (mediaVideo) mediaVideo.pause();
 			} else {
 				mediaVideo!.src = item.src;
