@@ -1,6 +1,6 @@
 ---
 import type { MediaItem, Session } from "../data/portfolio";
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 
 interface Props {
 	items: MediaItem[];
@@ -12,21 +12,62 @@ const { items, sessions } = Astro.props;
 function getItemsBySession(items: MediaItem[], sessionId: string) {
 	return items.filter((i) => i.session === sessionId);
 }
+
+// Glob de WebP en src/assets/portfolio/ (las claves son rutas relativas al componente)
+const imageModules = import.meta.glob<{ default: import("astro").ImageMetadata }>(
+	"../assets/portfolio/**/*.webp",
+	{ eager: true }
+);
+
+function getImageModule(assetKey: string) {
+	const key = Object.keys(imageModules).find(
+		(k) => k.replace(/^\.\.\/assets\/portfolio\//, "").replace(/\\/g, "/") === assetKey
+	);
+	return key ? (imageModules[key] as { default: import("astro").ImageMetadata }).default : undefined;
+}
+
+type MediaEntry = { type: "photo"; src: string; title: string } | { type: "video"; src: string; title: string; poster?: string };
+
+const sessionData = await Promise.all(
+	sessions.map(async (session) => {
+		const sessionItems = getItemsBySession(items, session.id);
+		const sessionPhotos = sessionItems.filter((i): i is MediaItem & { imageAsset: string } => i.type === "photo" && !!i.imageAsset);
+		const sessionVideos = sessionItems.filter((i) => i.type === "video" && i.videoUrl);
+		const photosList: MediaEntry[] = await Promise.all(
+			sessionPhotos.map(async (p) => {
+				const mod = getImageModule(p.imageAsset);
+				const src = mod ? (await getImage({ src: mod, width: 1200, quality: 95 })).src : "";
+				return { type: "photo" as const, src, title: p.title || "Foto" };
+			})
+		);
+		const videosList: MediaEntry[] = sessionVideos.map((v) => ({
+			type: "video" as const,
+			src: v.videoUrl!,
+			title: v.title || "Video",
+			poster: v.thumbnail,
+		}));
+		const allMediaList = [...videosList, ...photosList];
+		return { session, sessionItems, allMediaList };
+	})
+);
 ---
 
 <section class="gallery-section" id="galeria">
 	<h2 class="section-title">Portafolio de trabajo</h2>
 	<p class="section-subtitle script">Federico Rios</p>
 
-	{sessions.map((session) => {
-		const sessionItems = getItemsBySession(items, session.id);
-		const sessionPhotos = sessionItems.filter((i) => i.type === "photo");
-		const photosList = sessionPhotos.map((p) => ({ src: p.thumbnail, title: p.title || "Foto" }));
+	{sessionData.map(({ session, sessionItems, allMediaList }) => {
+		const sessionVideos = sessionItems.filter((i) => i.type === "video" && i.videoUrl);
+		const sessionPhotos = sessionItems.filter((i): i is MediaItem & { imageAsset: string } => i.type === "photo" && !!i.imageAsset);
+		const getMediaIndex = (item: MediaItem) =>
+			item.type === "video" && item.videoUrl
+				? allMediaList.findIndex((m) => m.type === "video" && m.src === item.videoUrl)
+				: sessionVideos.length + sessionPhotos.findIndex((p) => p.id === item.id);
 		return (
 			<div
 				class="session-block"
 				id={`sesion-${session.id}`}
-				data-photos={JSON.stringify(photosList)}
+				data-media={JSON.stringify(allMediaList)}
 			>
 				<h3 class="session-title">{session.name}</h3>
 				<div class="grid grid-vertical">
@@ -34,45 +75,65 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 						<p class="session-empty">Próximamente</p>
 					) : sessionItems.map((item) =>
 						item.type === "video" && item.videoUrl ? (
-							<div class="card">
-								<div class="card-thumb">
-									<video
-										class="card-video"
-										poster={item.thumbnail}
-										src={item.videoUrl}
-										controls
-										playsinline
-										preload="metadata"
-										title={item.title || "Video"}
-										aria-label={item.title ? `Video: ${item.title}. Controles de reproducción.` : "Video con controles de reproducción"}
-									>
-										<track kind="captions" src="/captions/empty.vtt" srclang="es" label="Español" default />
-									</video>
-								</div>
-								{item.title && <p class="card-title">{item.title}</p>}
-							</div>
-						) : (
 							<button
 								type="button"
-								class="card card-photo"
-								data-photo-src={item.thumbnail}
-								data-photo-title={item.title}
-								data-photo-index={sessionPhotos.findIndex((p) => p.id === item.id)}
-								aria-label={item.title ? `Ver ${item.title} en grande` : "Ver foto en grande"}
+								class="card card-video-btn"
+								data-media-index={getMediaIndex(item)}
+								aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
 							>
 								<div class="card-thumb">
-									<Image
-										src={item.thumbnail}
-										alt={item.title || "Foto del portafolio"}
-										width={260}
-										height={462}
-										loading="lazy"
-										class="card-thumb-img"
-									/>
+									<video
+										class="card-video-preview"
+										{...(item.thumbnail && !item.thumbnail.endsWith(".mp4") && !item.thumbnail.endsWith(".mov") ? { poster: item.thumbnail } : {})}
+										src={item.videoUrl}
+										muted
+										autoplay
+										loop
+										playsinline
+										webkit-playsinline="true"
+										preload="metadata"
+										aria-hidden="true"
+									></video>
+									<span class="card-badge" aria-hidden="true">
+										<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+											<path d="M8 5v14l11-7z" />
+										</svg>
+									</span>
 								</div>
 								{item.title && <p class="card-title">{item.title}</p>}
 							</button>
-						)
+						) : item.type === "photo" && item.imageAsset ? (
+							(() => {
+								const mod = getImageModule(item.imageAsset);
+								return mod ? (
+									<button
+										type="button"
+										class="card card-photo"
+										data-media-index={getMediaIndex(item)}
+										aria-label={item.title ? `Ver ${item.title} en grande` : "Ver foto en grande"}
+									>
+										<div class="card-thumb">
+											<Image
+												src={mod}
+												alt={item.title || "Foto del portafolio"}
+												width={260}
+												height={462}
+												quality={95}
+												loading="lazy"
+												decoding="async"
+												class="card-thumb-img"
+											/>
+										</div>
+										{item.title && <p class="card-title">{item.title}</p>}
+									</button>
+								) : (
+									<div class="card card-photo card-thumb-placeholder-wrap">
+										<div class="card-thumb card-thumb-placeholder">Sin imagen</div>
+										{item.title && <p class="card-title">{item.title}</p>}
+									</div>
+								);
+							})()
+						) : null
 					)}
 				</div>
 			</div>
@@ -80,19 +141,22 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 	})}
 </section>
 
-<div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Ver foto">
-	<button type="button" class="lightbox-close" aria-label="Cerrar" data-lightbox-close>×</button>
-	<button type="button" class="lightbox-prev" aria-label="Foto anterior" data-lightbox-prev>
+<div class="media-modal" id="media-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Ver contenido">
+	<button type="button" class="media-modal-close" aria-label="Cerrar" data-media-modal-close>×</button>
+	<button type="button" class="media-modal-prev" aria-label="Anterior" data-media-modal-prev>
 		<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
 	</button>
-	<button type="button" class="lightbox-next" aria-label="Foto siguiente" data-lightbox-next>
+	<button type="button" class="media-modal-next" aria-label="Siguiente" data-media-modal-next>
 		<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
 	</button>
-	<div class="lightbox-backdrop" data-lightbox-close></div>
-	<div class="lightbox-content">
-		<img class="lightbox-img" src="" alt="Vista ampliada de la foto del portafolio" data-lightbox-img />
-		<p class="lightbox-title" data-lightbox-title></p>
-		<p class="lightbox-counter" data-lightbox-counter></p>
+	<div class="media-modal-backdrop" data-media-modal-close></div>
+	<div class="media-modal-content">
+		<img class="media-modal-img" src="" alt="Vista ampliada" data-media-modal-img />
+		<video class="media-modal-video" controls playsinline preload="auto" autoplay data-media-modal-video>
+			<track kind="captions" src="/captions/empty.vtt" srclang="es" label="Español" default />
+		</video>
+		<p class="media-modal-title" data-media-modal-title></p>
+		<p class="media-modal-counter" data-media-modal-counter></p>
 	</div>
 </div>
 
@@ -183,14 +247,14 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 
 	.card-thumb img,
 	.card-thumb .card-thumb-img,
-	.card-thumb .card-video {
+	.card-thumb .card-video-preview {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 		display: block;
 	}
 
-	.card-video {
+	.card-video-preview {
 		background: #000;
 	}
 
@@ -201,7 +265,8 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		color: var(--text-muted);
 	}
 
-	.card-photo {
+	.card-photo,
+	.card-video-btn {
 		width: 100%;
 		text-align: left;
 		cursor: pointer;
@@ -212,8 +277,24 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		padding: 0;
 	}
 
-	/* Lightbox */
-	.lightbox {
+	.card-thumb-placeholder-wrap {
+		display: block;
+		width: 100%;
+		cursor: default;
+	}
+
+	.card-thumb-placeholder {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--bg-dark);
+		color: var(--text-muted);
+	}
+
+	/* Media Modal (Unified for photos and videos) */
+	.media-modal {
 		position: fixed;
 		inset: 0;
 		z-index: 200;
@@ -226,19 +307,19 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		transition: opacity 0.25s, visibility 0.25s;
 	}
 
-	.lightbox.is-open {
+	.media-modal.is-open {
 		opacity: 1;
 		visibility: visible;
 	}
 
-	.lightbox-backdrop {
+	.media-modal-backdrop {
 		position: absolute;
 		inset: 0;
 		background: rgba(0, 0, 0, 0.92);
 		cursor: pointer;
 	}
 
-	.lightbox-content {
+	.media-modal-content {
 		position: relative;
 		z-index: 2;
 		display: flex;
@@ -248,30 +329,47 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		max-height: 90vh;
 	}
 
-	.lightbox-img {
+	.media-modal-img,
+	.media-modal-video {
 		max-width: 100%;
 		max-height: 80vh;
 		width: auto;
 		height: auto;
-		object-fit: contain;
 		border-radius: 8px;
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+		display: none;
 	}
 
-	.lightbox-title {
+	.media-modal-img {
+		object-fit: contain;
+	}
+
+	.media-modal-video {
+		background: #000;
+	}
+
+	.media-modal.show-image .media-modal-img {
+		display: block;
+	}
+
+	.media-modal.show-video .media-modal-video {
+		display: block;
+	}
+
+	.media-modal-title {
 		margin-top: 1rem;
 		font-size: 1rem;
 		font-weight: 500;
 		color: var(--text-primary);
 	}
 
-	.lightbox-counter {
+	.media-modal-counter {
 		margin-top: 0.25rem;
 		font-size: 0.9rem;
 		color: var(--text-muted);
 	}
 
-	.lightbox-close {
+	.media-modal-close {
 		position: absolute;
 		top: 1.5rem;
 		right: 1.5rem;
@@ -291,12 +389,12 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		transition: background 0.2s;
 	}
 
-	.lightbox-close:hover {
+	.media-modal-close:hover {
 		background: rgba(255, 255, 255, 0.2);
 	}
 
-	.lightbox-prev,
-	.lightbox-next {
+	.media-modal-prev,
+	.media-modal-next {
 		position: absolute;
 		top: 50%;
 		transform: translateY(-50%);
@@ -314,16 +412,16 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 		transition: background 0.2s;
 	}
 
-	.lightbox-prev {
+	.media-modal-prev {
 		left: 1.5rem;
 	}
 
-	.lightbox-next {
+	.media-modal-next {
 		right: 1.5rem;
 	}
 
-	.lightbox-prev:hover,
-	.lightbox-next:hover {
+	.media-modal-prev:hover,
+	.media-modal-next:hover {
 		background: rgba(255, 255, 255, 0.2);
 	}
 
@@ -337,19 +435,19 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 			grid-template-columns: 1fr;
 		}
 
-		.lightbox {
+		.media-modal {
 			padding: 2rem 1rem;
 		}
 
-		.lightbox-prev {
+		.media-modal-prev {
 			left: 0.5rem;
 		}
 
-		.lightbox-next {
+		.media-modal-next {
 			right: 0.5rem;
 		}
 
-		.lightbox-close {
+		.media-modal-close {
 			top: 0.75rem;
 			right: 0.75rem;
 		}
@@ -357,81 +455,153 @@ function getItemsBySession(items: MediaItem[], sessionId: string) {
 </style>
 
 <script>
-	const lightbox = document.getElementById("lightbox");
-	const lightboxImg = document.querySelector("[data-lightbox-img]");
-	const lightboxTitle = document.querySelector("[data-lightbox-title]");
-	const lightboxCounter = document.querySelector("[data-lightbox-counter]");
-	const closeTriggers = document.querySelectorAll("[data-lightbox-close]");
-	const prevBtn = document.querySelector("[data-lightbox-prev]");
-	const nextBtn = document.querySelector("[data-lightbox-next]");
+	// Unified Media Modal (for both photos and videos)
+	type MediaItem = { type: "photo" | "video"; src: string; title: string; poster?: string };
 
-	let photos: { src: string; title: string }[] = [];
-	let currentIndex = 0;
+	const mediaModal = document.getElementById("media-modal");
+	const mediaImg = document.querySelector("[data-media-modal-img]") as HTMLImageElement;
+	const mediaVideo = document.querySelector("[data-media-modal-video]") as HTMLVideoElement;
+	const mediaTitle = document.querySelector("[data-media-modal-title]");
+	const mediaCounter = document.querySelector("[data-media-modal-counter]");
+	const closeTriggers = document.querySelectorAll("[data-media-modal-close]");
+	const prevBtn = document.querySelector("[data-media-modal-prev]");
+	const nextBtn = document.querySelector("[data-media-modal-next]");
 
-	function openLightbox(photosList: { src: string; title: string }[], index: number) {
-		photos = photosList;
-		currentIndex = index;
-		updateLightboxImage();
-		if (lightbox) {
-			lightbox.classList.add("is-open");
-			lightbox.setAttribute("aria-hidden", "false");
+	let mediaItems: MediaItem[] = [];
+	let currentMediaIndex = 0;
+
+	function openMediaModal(items: MediaItem[], index: number) {
+		mediaItems = items;
+		currentMediaIndex = index;
+		updateMedia();
+		if (mediaModal) {
+			mediaModal.classList.add("is-open");
+			mediaModal.setAttribute("aria-hidden", "false");
 			document.body.style.overflow = "hidden";
 		}
-		prevBtn?.setAttribute("aria-hidden", photos.length <= 1 ? "true" : "false");
-		nextBtn?.setAttribute("aria-hidden", photos.length <= 1 ? "true" : "false");
+		prevBtn?.setAttribute("aria-hidden", mediaItems.length <= 1 ? "true" : "false");
+		nextBtn?.setAttribute("aria-hidden", mediaItems.length <= 1 ? "true" : "false");
 	}
 
-	function closeLightbox() {
-		if (lightbox) {
-			lightbox.classList.remove("is-open");
-			lightbox.setAttribute("aria-hidden", "true");
+	function closeMediaModal() {
+		if (mediaModal) {
+			if (mediaVideo) {
+				mediaVideo.pause();
+				mediaVideo.removeAttribute("src");
+				mediaVideo.load();
+			}
+			mediaModal.classList.remove("is-open", "show-image", "show-video");
+			mediaModal.setAttribute("aria-hidden", "true");
 			document.body.style.overflow = "";
 		}
 	}
 
-	function updateLightboxImage() {
-		if (!photos.length || !lightboxImg) return;
-		const photo = photos[currentIndex];
-		(lightboxImg as HTMLImageElement).src = photo.src;
-		(lightboxImg as HTMLImageElement).alt = photo.title;
-		if (lightboxTitle) lightboxTitle.textContent = photo.title;
-		if (lightboxCounter) lightboxCounter.textContent = `${currentIndex + 1} / ${photos.length}`;
+	function updateMedia() {
+		if (!mediaItems.length || !mediaModal) return;
+		const item = mediaItems[currentMediaIndex];
+
+		// Remove previous type classes
+		mediaModal.classList.remove("show-image", "show-video");
+
+		if (item.type === "photo") {
+			mediaImg.src = item.src;
+			mediaImg.alt = item.title || "Vista ampliada de la foto del portafolio";
+			mediaModal.classList.add("show-image");
+			if (mediaVideo) {
+				mediaVideo.pause();
+			}
+		} else if (item.type === "video") {
+			mediaVideo.src = item.src;
+			if (item.poster) {
+				mediaVideo.poster = item.poster;
+			} else {
+				mediaVideo.removeAttribute("poster");
+			}
+			mediaVideo.load();
+			mediaVideo.play().catch(() => {
+				// Autoplay might fail due to browser policies
+			});
+			mediaModal.classList.add("show-video");
+		}
+
+		if (mediaTitle) mediaTitle.textContent = item.title;
+		if (mediaCounter) mediaCounter.textContent = `${currentMediaIndex + 1} / ${mediaItems.length}`;
 	}
 
 	function goPrev() {
-		if (photos.length <= 1) return;
-		currentIndex = currentIndex === 0 ? photos.length - 1 : currentIndex - 1;
-		updateLightboxImage();
+		if (mediaItems.length <= 1) return;
+		currentMediaIndex = currentMediaIndex === 0 ? mediaItems.length - 1 : currentMediaIndex - 1;
+		updateMedia();
 	}
 
 	function goNext() {
-		if (photos.length <= 1) return;
-		currentIndex = currentIndex === photos.length - 1 ? 0 : currentIndex + 1;
-		updateLightboxImage();
+		if (mediaItems.length <= 1) return;
+		currentMediaIndex = currentMediaIndex === mediaItems.length - 1 ? 0 : currentMediaIndex + 1;
+		updateMedia();
 	}
 
-	document.querySelectorAll(".card-photo").forEach((btn) => {
+	// Attach click handlers to all media cards
+	document.querySelectorAll(".card-photo, .card-video-btn").forEach((btn) => {
 		btn.addEventListener("click", () => {
 			const sessionBlock = btn.closest(".session-block");
-			const photosJson = sessionBlock?.getAttribute("data-photos");
-			if (!photosJson) return;
-			const photosList = JSON.parse(photosJson) as { src: string; title: string }[];
-			const index = parseInt(btn.getAttribute("data-photo-index") ?? "0", 10);
-			openLightbox(photosList, index);
+			const mediaJson = sessionBlock?.getAttribute("data-media");
+			if (!mediaJson) return;
+			const mediaList = JSON.parse(mediaJson) as MediaItem[];
+			const index = parseInt(btn.getAttribute("data-media-index") ?? "0", 10);
+			openMediaModal(mediaList, index);
 		});
 	});
 
-	closeTriggers.forEach((el) => el.addEventListener("click", closeLightbox));
+	closeTriggers.forEach((el) => el.addEventListener("click", closeMediaModal));
 	prevBtn?.addEventListener("click", goPrev);
 	nextBtn?.addEventListener("click", goNext);
 
-	lightbox?.addEventListener("click", (e) => {
-		if (e.target === lightbox) closeLightbox();
+	mediaModal?.addEventListener("click", (e) => {
+		if (e.target === mediaModal) closeMediaModal();
 	});
 
 	document.addEventListener("keydown", (e) => {
-		if (e.key === "Escape" && lightbox?.classList.contains("is-open")) closeLightbox();
-		if (e.key === "ArrowLeft" && lightbox?.classList.contains("is-open")) goPrev();
-		if (e.key === "ArrowRight" && lightbox?.classList.contains("is-open")) goNext();
+		if (e.key === "Escape" && mediaModal?.classList.contains("is-open")) closeMediaModal();
+		if (e.key === "ArrowLeft" && mediaModal?.classList.contains("is-open")) goPrev();
+		if (e.key === "ArrowRight" && mediaModal?.classList.contains("is-open")) goNext();
 	});
+
+	// Autoplay videos in cards when they enter viewport (Safari-compatible)
+	const videoPreviewElements = document.querySelectorAll(".card-video-preview");
+
+	// Helper function for Safari compatibility
+	function playVideo(video: HTMLVideoElement) {
+		// Ensure muted is set (Safari requirement)
+		video.muted = true;
+		
+		// Check if video has enough data to play
+		if (video.readyState >= 2) {
+			video.play().catch(() => {});
+		} else {
+			// Wait for video to have enough data
+			video.addEventListener("canplay", () => {
+				video.play().catch(() => {});
+			}, { once: true });
+		}
+	}
+
+	if (videoPreviewElements.length > 0 && "IntersectionObserver" in window) {
+		const videoObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					const video = entry.target as HTMLVideoElement;
+					if (entry.isIntersecting) {
+						playVideo(video);
+					} else {
+						video.pause();
+					}
+				});
+			},
+			{
+				threshold: 0.5,
+			}
+		);
+
+		videoPreviewElements.forEach((video) => videoObserver.observe(video));
+	}
 </script>

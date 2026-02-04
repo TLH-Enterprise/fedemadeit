@@ -6,7 +6,11 @@
 export interface MediaItem {
 	id: string;
 	title?: string;
-	thumbnail: string;
+	/** Ruta del WebP en src/assets/portfolio/ (ej. "eventos-corporativos/1.webp"). Solo para type "photo". */
+	imageAsset?: string;
+	/** URL del poster del video. Solo para type "video". Opcional. */
+	thumbnail?: string;
+	/** URL del video (CDN o pública). Solo para type "video". */
 	videoUrl?: string;
 	type: "video" | "photo";
 	session?: string;
@@ -27,6 +31,7 @@ export interface Program {
 
 export const sessions: Session[] = [
 	{ id: "eventos-corporativos", name: "Eventos Corporativos" },
+	{ id: "eventos-sociales", name: "Eventos sociales" },
 	{ id: "moda-marcas", name: "Moda y marcas" },
 	{ id: "djs-videos-musicales", name: "Djs y Videos Musicales" },
 	{ id: "contenido-marca", name: "Contenido de marca" },
@@ -57,80 +62,127 @@ export const programCategories: { title: string; programs: Program[] }[] = [
 	},
 ];
 
-/** Videos y fotos del portafolio. session debe coincidir con el id de una sesión arriba. */
+/** Videos y fotos del portafolio. session debe coincidir con el id de una sesión arriba.
+ * Fotos: imageAsset = ruta WebP en src/assets/portfolio/.
+ * Videos: videoUrl = URL del CDN; thumbnail = URL del poster (opcional). */
 export const portfolioItems: MediaItem[] = [
-	{
-		id: "1",
-		title: "Video",
-		thumbnail: "/FedeVideo.mp4",
-		videoUrl: "/FedeVideo.mp4",
-		type: "video",
-		session: "edicion-videos",
-	},
-	{
-		id: "2",
-		title: "Outdoor",
-		thumbnail: "https://placehold.co/400x600/1a1a1a/69f0ae?text=Video+2",
-		videoUrl: "#",
-		type: "video",
-		session: "contenido-marca",
-	},
 	{
 		id: "ec-1",
 		title: "Llados Fitness",
-		thumbnail: "/eventos-corporativos/1.jpeg",
+		imageAsset: "eventos-corporativos/1.webp",
 		type: "photo",
 		session: "eventos-corporativos",
 	},
 	{
 		id: "ec-2",
 		title: "Santiago Ospina - XHobbies",
-		thumbnail: "/eventos-corporativos/2.jpeg",
+		imageAsset: "eventos-corporativos/2.webp",
 		type: "photo",
 		session: "eventos-corporativos",
 	},
 	{
 		id: "ec-3",
 		title: "Feria Effix",
-		thumbnail: "/eventos-corporativos/3.jpeg",
+		imageAsset: "eventos-corporativos/3.webp",
 		type: "photo",
 		session: "eventos-corporativos",
 	},
 	{
 		id: "ec-4",
 		title: "Feria Effix",
-		thumbnail: "/eventos-corporativos/4.jpeg",
+		imageAsset: "eventos-corporativos/4.webp",
 		type: "photo",
 		session: "eventos-corporativos",
 	},
 	{
-		id: "4",
-		title: "Comercial",
-		thumbnail: "https://placehold.co/400x600/1a1a1a/4fc3f7?text=Video+4",
-		videoUrl: "#",
+		id: "es-1",
+		title: "Seniors Prom",
+		imageAsset: "eventos-sociales/social1.webp",
+		type: "photo",
+		session: "eventos-sociales",
+	},
+	{
+		id: "es-2",
+		title: "Seniors Prom",
+		imageAsset: "eventos-sociales/social2.webp",
+		type: "photo",
+		session: "eventos-sociales",
+	},
+	{
+		id: "es-3",
+		title: "Seniors Prom",
+		imageAsset: "eventos-sociales/social3.webp",
+		type: "photo",
+		session: "eventos-sociales",
+	},
+	{
+		id: "es-4",
+		title: "Seniors Prom",
+		imageAsset: "eventos-sociales/social4.webp",
+		type: "photo",
+		session: "eventos-sociales",
+	},
+	{
+		id: "es-5",
+		title: "Seniors Prom",
+		imageAsset: "eventos-sociales/social5.webp",
+		type: "photo",
+		session: "eventos-sociales",
+	},
+	{
+		id: "mm-1",
+		title: "Oleo Lingerie | Ropa interior y de playa",
+		videoUrl: "https://tu-cdn.com/modas-marcas/video1.mp4",
 		type: "video",
 		session: "moda-marcas",
 	},
 	{
-		id: "6",
-		title: "B-Roll",
-		thumbnail: "https://placehold.co/600x400/1a1a1a/ffd54f?text=Horizontal+2",
-		videoUrl: "#",
+		id: "mm-2",
+		title: "Rich Clothing | Streetwear Designs",
+		videoUrl: "https://tu-cdn.com/modas-marcas/video2.mp4",
 		type: "video",
 		session: "moda-marcas",
 	},
 	{
-		id: "7",
-		title: "Foto 1",
-		thumbnail: "/FedeFoto1.jpg",
-		type: "photo",
-		session: "edicion-videos",
+		id: "mm-3",
+		title: "Isa Núñez | Vestidos de baño | Ropa de playa",
+		videoUrl: "https://tu-cdn.com/modas-marcas/video3.mp4",
+		type: "video",
+		session: "moda-marcas",
 	},
 	{
-		id: "8",
-		title: "Foto 2",
-		thumbnail: "/FedeFoto2.jpeg",
+		id: "mm-4",
+		title: "Monkeys United",
+		videoUrl: "https://tu-cdn.com/modas-marcas/video4.mp4",
+		type: "video",
+		session: "moda-marcas",
+	},
+	{
+		id: "mm-5",
+		title: "Rich Clothing | Streetwear Designs",
+		imageAsset: "modas-marcas/moda1.webp",
 		type: "photo",
-		session: "edicion-videos",
+		session: "moda-marcas",
+	},
+	{
+		id: "mm-6",
+		title: "Rich Clothing | Streetwear Designs",
+		imageAsset: "modas-marcas/moda2.webp",
+		type: "photo",
+		session: "moda-marcas",
+	},
+	{
+		id: "mm-7",
+		title: "Rich Clothing | Streetwear Designs",
+		imageAsset: "modas-marcas/moda3.webp",
+		type: "photo",
+		session: "moda-marcas",
+	},
+	{
+		id: "mm-8",
+		title: "Rich Clothing | Streetwear Designs",
+		imageAsset: "modas-marcas/moda4.webp",
+		type: "photo",
+		session: "moda-marcas",
 	},
 ];

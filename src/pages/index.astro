@@ -5,12 +5,16 @@ import Hero from "../components/Hero.astro";
 import Gallery from "../components/Gallery.astro";
 import Contact from "../components/Contact.astro";
 import { sessions, portfolioItems } from "../data/portfolio";
+
+// Imagen del hero: coloca FedeFoto2.webp en src/assets/hero/ para usarla
+const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.webp", { eager: true });
+const heroImage = heroModules["../assets/hero/FedeFoto2.webp"]?.default ?? Object.values(heroModules)[0]?.default;
 ---
 
 <Layout title="Fede Made It | Portafolio de trabajo" description="Portafolio de Federico Rios - Videografía y fotografía">
 	<Navbar sessions={sessions} />
 	<main>
-		<Hero name="Federico Rios" subtitle="Portafolio" image="/FedeFoto2.jpeg" />
+		<Hero name="Federico Rios" subtitle="Portafolio" image={heroImage} />
 		<Gallery items={portfolioItems} sessions={sessions} />
 		<Contact />
 	</main>
