@@ -36,7 +36,11 @@ function getYoutubeId(url: string): string | null {
 function getYoutubeEmbedUrl(id: string) {
 	return `https://www.youtube.com/embed/${id}?autoplay=1`;
 }
+/** Thumbnail YouTube: maxresdefault (1280×720) cuando existe; si no, fallback a hqdefault (480×360). */
 function getYoutubeThumbnail(id: string) {
+	return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+}
+function getYoutubeThumbnailFallback(id: string) {
 	return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 }
 
@@ -116,11 +120,13 @@ const sessionData = await Promise.all(
 										<img
 											class="card-video-preview"
 											src={getYoutubeThumbnail(getYoutubeId(item.videoUrl)!)}
+											data-fallback={getYoutubeThumbnailFallback(getYoutubeId(item.videoUrl)!)}
 											alt=""
 											width={1040}
 											height={1848}
 											loading="lazy"
 											fetchpriority="low"
+											onerror="this.onerror=null;this.src=this.dataset.fallback||''"
 										/>
 										<span class="card-badge" aria-hidden="true">
 											<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">

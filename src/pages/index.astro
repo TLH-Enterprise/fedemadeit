@@ -6,9 +6,9 @@ import Gallery from "../components/Gallery.astro";
 import Contact from "../components/Contact.astro";
 import { sessions, portfolioItems } from "../data/portfolio";
 
-// Imagen del hero: coloca FedeFoto2.webp en src/assets/hero/ para usarla
-const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.webp", { eager: true });
-const heroImage = heroModules["../assets/hero/FedeFoto2.webp"]?.default ?? Object.values(heroModules)[0]?.default;
+// Imagen del hero: usa FedeFotoPortada.jpeg en src/assets/hero/
+const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg}", { eager: true });
+const heroImage = heroModules["../assets/hero/FedeFotoPortada.jpeg"]?.default ?? Object.values(heroModules)[0]?.default;
 ---
 
 <Layout title="Fede Made It | Portafolio de trabajo" description="Portafolio de Federico Rios - Videografía y fotografía">
