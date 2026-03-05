@@ -1,0 +1,129 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import { sessions } from "../data/portfolio";
+import { Image } from "astro:assets";
+
+// Imagen de perfil (la que estaba en el index)
+const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg,png,webp}", { eager: true });
+const profileImage = heroModules["../assets/hero/FedeFotoPortada.jpeg"]?.default ?? Object.values(heroModules)[0]?.default;
+---
+
+<Layout title="Sobre mí | Fede Made It" description="Conoce a Federico Ríos - Creador audiovisual, videografía y fotografía">
+	<Navbar sessions={sessions} />
+	<main class="sobre-mi">
+		<section class="sobre-mi-inner">
+			<div class="sobre-mi-image-wrap">
+				{profileImage && (
+					<Image
+						src={profileImage}
+						alt="Federico Ríos, creador audiovisual"
+						class="sobre-mi-image"
+						width={400}
+						height={533}
+						quality={90}
+					/>
+				)}
+			</div>
+			<div class="sobre-mi-text">
+				<h1 class="sobre-mi-title">Sobre mí</h1>
+				<h2 class="sobre-mi-name">Fede Made It</h2>
+				<p class="sobre-mi-p">
+					Fede Made It es un portafolio audiovisual enfocado en contar historias con una estética limpia y cinematográfica.
+				</p>
+				<p class="sobre-mi-p">
+					Apasionado por el detalle, el movimiento y la edición con intención: me gusta trabajar de forma cercana con cada cliente, entendiendo la idea y traduciéndola a contenido que se sienta moderno, auténtico y con identidad.
+				</p>
+				<p class="sobre-mi-p">
+					Mi objetivo es simple: que tu contenido se vea premium y se sienta real.
+				</p>
+			</div>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.sobre-mi {
+		background: var(--bg-dark);
+		min-height: 100vh;
+		padding: 6rem 1.5rem 4rem;
+	}
+
+	.sobre-mi-inner {
+		max-width: 1100px;
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: minmax(240px, 340px) 1fr;
+		gap: 3rem;
+		align-items: start;
+	}
+
+	.sobre-mi-image-wrap {
+		position: sticky;
+		top: 6rem;
+		background: var(--bg-card);
+		padding: 0.5rem;
+		border-radius: 4px;
+		max-width: 340px;
+	}
+
+	.sobre-mi-image {
+		width: 100%;
+		height: auto;
+		display: block;
+		border-radius: 4px;
+		object-fit: cover;
+	}
+
+	.sobre-mi-text {
+		padding-top: 0.5rem;
+	}
+
+	.sobre-mi-title {
+		font-family: var(--font-display);
+		font-size: clamp(2.5rem, 5vw, 3.5rem);
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: var(--text-primary);
+		margin-bottom: 1.5rem;
+		font-weight: 400;
+	}
+
+	.sobre-mi-name {
+		font-family: var(--font-body);
+		font-size: 1.5rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-primary);
+		margin-bottom: 1.5rem;
+	}
+
+	.sobre-mi-p {
+		font-size: 1rem;
+		line-height: 1.7;
+		color: var(--text-muted);
+		margin-bottom: 1.25rem;
+	}
+
+	.sobre-mi-p:last-child {
+		margin-bottom: 0;
+	}
+
+	@media (max-width: 768px) {
+		.sobre-mi-inner {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+
+		.sobre-mi-image-wrap {
+			position: static;
+			max-width: 280px;
+			margin: 0 auto;
+		}
+
+		.sobre-mi-text {
+			text-align: left;
+		}
+	}
+</style>

@@ -2,20 +2,27 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Hero from "../components/Hero.astro";
-import Gallery from "../components/Gallery.astro";
+import FeaturedPortfolio from "../components/FeaturedPortfolio.astro";
 import Contact from "../components/Contact.astro";
-import { sessions, portfolioItems } from "../data/portfolio";
+import Clients from "../components/Clients.astro";
+import { sessions, getFeaturedPortfolioItems } from "../data/portfolio";
+import { clients } from "../data/clients";
 
-// Imagen del hero: usa FedeFotoPortada.jpeg en src/assets/hero/
-const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg}", { eager: true });
-const heroImage = heroModules["../assets/hero/FedeFotoPortada.jpeg"]?.default ?? Object.values(heroModules)[0]?.default;
+// Imagen de fondo del hero: camera.jpg en src/assets/hero/
+const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg,png,webp}", { eager: true });
+const heroBackground = heroModules["../assets/hero/camera.jpg"]?.default ?? Object.values(heroModules)[0]?.default;
 ---
 
 <Layout title="Fede Made It | Portafolio de trabajo" description="Portafolio de Federico Rios - Videografía y fotografía">
 	<Navbar sessions={sessions} />
 	<main>
-		<Hero name="Federico Ríos" subtitle="Portafolio" image={heroImage} />
-		<Gallery items={portfolioItems} sessions={sessions} />
+		<Hero
+			name="Federico Ríos"
+			subtitle="Photography — Videography — Design - AI Production"
+			backgroundImage={heroBackground}
+		/>
+		<FeaturedPortfolio items={getFeaturedPortfolioItems()} />
+		<Clients clients={clients} label="Trabajos" title="Clientes" subtitle="Algunos proyectos con marcas y personas." />
 		<Contact />
 	</main>
 </Layout>

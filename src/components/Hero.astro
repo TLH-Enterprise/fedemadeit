@@ -5,46 +5,56 @@ import { Image } from "astro:assets";
 interface Props {
 	name: string;
 	subtitle?: string;
-	/** Imagen del hero: import desde src/assets/hero o URL (public). */
-	image?: ImageMetadata | string;
+	/** Imagen de fondo a pantalla completa (hero). Import desde src/assets/hero. */
+	backgroundImage?: ImageMetadata | string;
 }
 
-const { name, subtitle = "Portafolio", image } = Astro.props;
+const { name, subtitle, backgroundImage } = Astro.props;
+const nameParts = name.split(" ");
+const firstName = nameParts[0] ?? "";
+const lastName = nameParts.slice(1).join(" ") || "";
 ---
 
 <section class="hero">
-	<div class="hero-bg"></div>
-	<div class="hero-content">
-		<div class="hero-text">
-			<div class="hero-circle" aria-hidden="true"></div>
-			<h1 class="hero-name">
-				<span class="hero-name-first">{name.split(" ")[0]}</span>
-				<span class="hero-name-sep">×</span>
-				<span class="hero-name-last">{name.split(" ").slice(1).join(" ")}</span>
-			</h1>
-			<p class="hero-subtitle">{subtitle}</p>
-		</div>
-		{image && (
-			<div class="hero-image-wrap">
-				<Image src={image as import("astro").ImageMetadata} alt={`${name}, portafolio`} class="hero-image" width={480} height={640} quality={95} loading="eager" decoding="async" />
-			</div>
+	<div class="hero-bg">
+		{backgroundImage && (
+			<Image
+				src={backgroundImage as ImageMetadata}
+				alt=""
+				class="hero-bg-img"
+				width={1920}
+				height={1080}
+				quality={85}
+				loading="eager"
+				fetchpriority="high"
+			/>
 		)}
+		<div class="hero-overlay" aria-hidden="true"></div>
 	</div>
-	<div class="hero-edges" aria-hidden="true">
-		<span class="edge edge-tl"></span>
-		<span class="edge edge-r"></span>
-		<span class="edge edge-b"></span>
+	<div class="hero-content">
+		<div class="hero-title-wrap">
+			<h1 class="hero-title">
+				<span class="hero-name-first">{firstName}</span>
+				<span class="hero-name-sep" aria-hidden="true">×</span>
+				<span class="hero-name-last">{lastName}</span>
+			</h1>
+			<div class="hero-circle" aria-hidden="true"></div>
+		</div>
+		{subtitle && <p class="hero-subtitle">{subtitle}</p>}
+	</div>
+	<div class="hero-scroll" aria-hidden="true">
+		<span class="hero-scroll-text">Scroll</span>
 	</div>
 </section>
 
 <style>
 	.hero {
 		position: relative;
-		min-height: 85vh;
+		min-height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 6rem 1.5rem 4rem;
+		text-align: center;
 		overflow: hidden;
 	}
 
@@ -55,137 +65,116 @@ const { name, subtitle = "Portafolio", image } = Astro.props;
 		z-index: 0;
 	}
 
-	.hero-content {
-		position: relative;
-		z-index: 1;
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 3rem;
-		align-items: center;
-		max-width: 1100px;
+	.hero-bg-img {
+		position: absolute;
+		inset: 0;
 		width: 100%;
-	}
-
-	.hero-image-wrap {
-		position: relative;
-		transform: rotate(-2deg);
-	}
-
-	.hero-image {
-		width: 100%;
-		max-width: 420px;
-		height: auto;
-		border-radius: 8px;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+		height: 100%;
 		object-fit: cover;
 	}
 
-	.hero-text {
-		position: relative;
-	}
-
-	.hero-circle {
+	.hero-overlay {
 		position: absolute;
-		top: -2rem;
-		right: 2rem;
-		width: 140px;
-		height: 140px;
-		border: 3px solid var(--text-primary);
-		border-radius: 50%;
-		box-shadow: 0 0 40px var(--glow-white), inset 0 0 30px var(--glow-white);
-		opacity: 0.9;
+		inset: 0;
+		background: linear-gradient(
+			to bottom,
+			rgba(0, 0, 0, 0.4) 0%,
+			rgba(0, 0, 0, 0.6) 50%,
+			rgba(0, 0, 0, 0.75) 100%
+		);
+		z-index: 1;
 	}
 
-	.hero-name {
-		font-family: var(--font-display);
-		font-size: clamp(2.5rem, 6vw, 4rem);
-		line-height: 1.1;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
+	.hero-content {
+		position: relative;
+		z-index: 2;
+		padding: 6rem 1.5rem 4rem;
+		max-width: 900px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+	}
+
+	.hero-title-wrap {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		flex-wrap: wrap;
 		margin-bottom: 0.5rem;
 	}
 
+	.hero-title {
+		font-family: var(--font-display);
+		font-size: clamp(2.5rem, 8vw, 4.5rem);
+		line-height: 1.1;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		margin: 0;
+		text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+	}
+
 	.hero-name-first {
-		color: var(--accent-blue);
+		color: #ffffff;
 	}
 
 	.hero-name-sep {
 		display: inline-block;
 		margin: 0 0.15em;
-		color: var(--accent-yellow);
+		color: rgba(255, 255, 255, 0.7);
 		font-size: 0.7em;
 		vertical-align: middle;
 	}
 
 	.hero-name-last {
-		color: var(--accent-yellow);
+		color: #ffffff;
+	}
+
+	.hero-circle {
+		width: clamp(80px, 18vw, 140px);
+		height: clamp(80px, 18vw, 140px);
+		border: 3px solid rgba(255, 255, 255, 0.9);
+		border-radius: 50%;
+		flex-shrink: 0;
 	}
 
 	.hero-subtitle {
-		font-size: 1.25rem;
-		font-weight: 600;
+		font-size: clamp(0.75rem, 2vw, 0.95rem);
+		font-weight: 400;
 		text-transform: uppercase;
 		letter-spacing: 0.2em;
-		color: var(--accent-yellow);
-		opacity: 0.95;
+		color: rgba(255, 255, 255, 0.8);
+		margin: 0;
+		margin-top: 0.5rem;
 	}
 
-	.hero-edges {
-		pointer-events: none;
+	.hero-scroll {
 		position: absolute;
-		inset: 0;
+		bottom: 2rem;
+		left: 50%;
+		transform: translateX(-50%);
 		z-index: 2;
 	}
 
-	.edge {
-		position: absolute;
-		background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+	.hero-scroll-text {
+		font-family: var(--font-body);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.25em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		opacity: 0.85;
+		animation: hero-scroll-bounce 2s ease-in-out infinite;
 	}
 
-	.edge-tl {
-		top: 0;
-		left: 0;
-		width: 200px;
-		height: 200px;
-	}
-
-	.edge-r {
-		top: 0;
-		right: 0;
-		width: 120px;
-		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255,255,255,0.02));
-	}
-
-	.edge-b {
-		bottom: 0;
-		left: 0;
-		right: 0;
-		height: 80px;
-		background: linear-gradient(0deg, rgba(255,255,255,0.03), transparent);
-	}
-
-	@media (max-width: 768px) {
-		.hero-content {
-			grid-template-columns: 1fr;
-			text-align: center;
+	@keyframes hero-scroll-bounce {
+		0%, 100% {
+			transform: translateY(0);
 		}
-
-		.hero-image-wrap {
-			order: 1;
-			transform: none;
-			margin: 0 auto;
-		}
-
-		.hero-circle {
-			right: 50%;
-			transform: translateX(50%);
-			width: 100px;
-			height: 100px;
-		}
-
-		.hero-name {
-			font-size: 2.25rem;
+		50% {
+			transform: translateY(-6px);
 		}
 	}
 </style>

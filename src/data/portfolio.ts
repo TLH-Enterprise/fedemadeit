@@ -62,6 +62,9 @@ export const programCategories: { title: string; programs: Program[] }[] = [
 	},
 ];
 
+/** IDs de los 3 trabajos destacados que se muestran en la home. Edita este array para cambiar cuáles aparecen. */
+export const featuredPortfolioIds: string[] = ["ec-1", "ec-2", "mm-2"];
+
 /** Videos y fotos del portafolio. session debe coincidir con el id de una sesión arriba.
  * Fotos: imageAsset = ruta WebP en src/assets/portfolio/.
  * Videos: videoUrl = URL directa (MP4, etc.) o URL de YouTube (watch?v=ID o youtu.be/ID). thumbnail = poster opcional. */
@@ -277,3 +280,9 @@ export const portfolioItems: MediaItem[] = [
 		session: "edicion-videos",
 	},
 ];
+
+/** Devuelve los 3 items destacados en el orden definido en featuredPortfolioIds. */
+export function getFeaturedPortfolioItems(): MediaItem[] {
+	const byId = Object.fromEntries(portfolioItems.map((i) => [i.id, i]));
+	return featuredPortfolioIds.map((id) => byId[id]).filter(Boolean);
+}

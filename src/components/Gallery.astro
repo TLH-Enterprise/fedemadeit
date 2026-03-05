@@ -9,11 +9,11 @@ interface Props {
 
 const { items, sessions } = Astro.props;
 
-function getItemsBySession(items: MediaItem[], sessionId: string) {
-	return items.filter((i) => i.session === sessionId);
+const sessionById = Object.fromEntries(sessions.map((s) => [s.id, s]));
+function getSessionName(sessionId: string | undefined): string {
+	return sessionId ? sessionById[sessionId]?.name ?? "" : "";
 }
 
-// Glob de WebP en src/assets/portfolio/ (las claves son rutas relativas al componente)
 const imageModules = import.meta.glob<{ default: import("astro").ImageMetadata }>(
 	"../assets/portfolio/**/*.webp",
 	{ eager: true }
@@ -36,7 +36,6 @@ function getYoutubeId(url: string): string | null {
 function getYoutubeEmbedUrl(id: string) {
 	return `https://www.youtube.com/embed/${id}?autoplay=1`;
 }
-/** Thumbnail YouTube: maxresdefault (1280×720) cuando existe; si no, fallback a hqdefault (480×360). */
 function getYoutubeThumbnail(id: string) {
 	return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
 }
@@ -48,160 +47,181 @@ type MediaEntry =
 	| { type: "photo"; src: string; title: string }
 	| { type: "video"; src: string; title: string; poster?: string; isYoutube?: boolean; isShort?: boolean };
 
-const sessionData = await Promise.all(
-	sessions.map(async (session) => {
-		const sessionItems = getItemsBySession(items, session.id);
-		const sessionPhotos = sessionItems.filter((i): i is MediaItem & { imageAsset: string } => i.type === "photo" && !!i.imageAsset);
-		const sessionVideos = sessionItems.filter((i) => i.type === "video" && i.videoUrl);
-		const photosList: MediaEntry[] = await Promise.all(
-			sessionPhotos.map(async (p) => {
-				const mod = getImageModule(p.imageAsset);
-				const src = mod ? (await getImage({ src: mod, width: 1200, quality: 95 })).src : "";
-				return { type: "photo" as const, src, title: p.title || "Foto" };
-			})
-		);
-		const videosList: MediaEntry[] = sessionVideos.map((v) => {
-			const ytId = getYoutubeId(v.videoUrl!);
-			if (ytId) {
-				const isShort = v.videoUrl!.includes("/shorts/");
-				return {
-					type: "video" as const,
-					src: getYoutubeEmbedUrl(ytId),
-					title: v.title || "Video",
-					poster: getYoutubeThumbnail(ytId),
-					isYoutube: true,
-					isShort,
-				};
-			}
-			return {
-				type: "video" as const,
-				src: v.videoUrl!,
-				title: v.title || "Video",
-				poster: v.thumbnail,
+interface CardData {
+	item: MediaItem;
+	mediaIndex: number;
+	mediaEntry: MediaEntry | null;
+	sessionName: string;
+}
+
+const allMedia: MediaEntry[] = [];
+const cardDataList: CardData[] = [];
+
+for (const item of items) {
+	const sessionName = getSessionName(item.session);
+	let mediaEntry: MediaEntry | null = null;
+
+	if (item.type === "photo" && item.imageAsset) {
+		const mod = getImageModule(item.imageAsset);
+		if (mod) {
+			const { src } = await getImage({ src: mod, width: 1200, quality: 95 });
+			mediaEntry = { type: "photo", src, title: item.title || "Foto" };
+		}
+	} else if (item.type === "video" && item.videoUrl) {
+		const ytId = getYoutubeId(item.videoUrl);
+		if (ytId) {
+			const isShort = item.videoUrl.includes("/shorts/");
+			mediaEntry = {
+				type: "video",
+				src: getYoutubeEmbedUrl(ytId),
+				title: item.title || "Video",
+				poster: getYoutubeThumbnail(ytId),
+				isYoutube: true,
+				isShort,
 			};
-		});
-		const allMediaList = [...videosList, ...photosList];
-		return { session, sessionItems, allMediaList };
-	})
-);
+		} else {
+			mediaEntry = {
+				type: "video",
+				src: item.videoUrl,
+				title: item.title || "Video",
+				poster: item.thumbnail,
+			};
+		}
+	}
+
+	if (mediaEntry) {
+		cardDataList.push({ item, mediaIndex: allMedia.length, mediaEntry, sessionName });
+		allMedia.push(mediaEntry);
+	}
+}
 ---
 
-<section class="gallery-section" id="galeria">
-	<h2 class="section-title">Portafolio de trabajo</h2>
-	<p class="section-subtitle script">Federico Ríos</p>
+<section class="gallery-section" id="galeria" data-all-media={JSON.stringify(allMedia)}>
+	<h2 class="section-title">Portfolio</h2>
+	<p class="section-subtitle">Una selección de trabajos por categorías.</p>
 
-	{sessionData.map(({ session, sessionItems, allMediaList }) => {
-		const sessionVideos = sessionItems.filter((i) => i.type === "video" && i.videoUrl);
-		const sessionPhotos = sessionItems.filter((i): i is MediaItem & { imageAsset: string } => i.type === "photo" && !!i.imageAsset);
-		const getMediaIndex = (item: MediaItem) =>
-			item.type === "video" && item.videoUrl
-				? sessionVideos.findIndex((v) => v.id === item.id)
-				: sessionVideos.length + sessionPhotos.findIndex((p) => p.id === item.id);
-		return (
-			<div
-				class="session-block"
-				id={`sesion-${session.id}`}
-				data-media={JSON.stringify(allMediaList)}
-			>
-				<h3 class="session-title">{session.name}</h3>
-				<div class="grid grid-vertical">
-					{sessionItems.length === 0 ? (
-						<p class="session-empty">Próximamente</p>
-					) : sessionItems.map((item) =>
-						item.type === "video" && item.videoUrl ? (
-							getYoutubeId(item.videoUrl) ? (
-								<button
-									type="button"
-									class="card card-video-btn"
-									data-media-index={getMediaIndex(item)}
-									aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
-								>
-									<div class="card-thumb">
-										<img
-											class="card-video-preview"
-											src={getYoutubeThumbnail(getYoutubeId(item.videoUrl)!)}
-											data-fallback={getYoutubeThumbnailFallback(getYoutubeId(item.videoUrl)!)}
-											alt=""
-											width={1040}
-											height={1848}
-											loading="lazy"
-											fetchpriority="low"
-											onerror="this.onerror=null;this.src=this.dataset.fallback||''"
-										/>
-										<span class="card-badge" aria-hidden="true">
-											<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-												<path d="M8 5v14l11-7z" />
-											</svg>
-										</span>
-									</div>
-									{item.title && <p class="card-title">{item.title}</p>}
-								</button>
-							) : (
-								<button
-									type="button"
-									class="card card-video-btn"
-									data-media-index={getMediaIndex(item)}
-									aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
-								>
-									<div class="card-thumb">
-										<video
-											class="card-video-preview"
-											{...(item.thumbnail && !item.thumbnail.endsWith(".mp4") && !item.thumbnail.endsWith(".mov") ? { poster: item.thumbnail } : {})}
-											src={item.videoUrl}
-											muted
-											autoplay
-											loop
-											playsinline
-											webkit-playsinline="true"
-											preload="metadata"
-											aria-hidden="true"
-										></video>
-										<span class="card-badge" aria-hidden="true">
-											<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-												<path d="M8 5v14l11-7z" />
-											</svg>
-										</span>
-									</div>
-									{item.title && <p class="card-title">{item.title}</p>}
-								</button>
-							)
-						) : item.type === "photo" && item.imageAsset ? (
-							(() => {
-								const mod = getImageModule(item.imageAsset);
-								return mod ? (
-									<button
-										type="button"
-										class="card card-photo"
-										data-media-index={getMediaIndex(item)}
-										aria-label={item.title ? `Ver ${item.title} en grande` : "Ver foto en grande"}
-									>
-										<div class="card-thumb">
-											<Image
-												src={mod}
-												alt={item.title || "Foto del portafolio"}
-												width={1040}
-												height={1848}
-												quality={95}
-												loading="lazy"
-												decoding="async"
-												class="card-thumb-img"
-											/>
-										</div>
-										{item.title && <p class="card-title">{item.title}</p>}
-									</button>
-								) : (
-									<div class="card card-photo card-thumb-placeholder-wrap">
-										<div class="card-thumb card-thumb-placeholder">Sin imagen</div>
-										{item.title && <p class="card-title">{item.title}</p>}
-									</div>
-								);
-							})()
-						) : null
-					)}
-				</div>
-			</div>
-		);
-	})}
+	<div class="gallery-filters" role="tablist" aria-label="Filtrar por sesión">
+		<button type="button" class="filter-btn is-active" data-session-filter="all" role="tab" aria-selected="true">Todas las sesiones</button>
+		{sessions.map((session) => (
+			<button type="button" class="filter-btn" data-session-filter={session.id} role="tab" aria-selected="false">{session.name}</button>
+		))}
+	</div>
+
+	<div class="grid grid-portfolio">
+		{cardDataList.map(({ item, mediaIndex, mediaEntry, sessionName }) => {
+			const typeLabel = item.type === "video" ? "Video" : "Foto";
+			return item.type === "video" && item.videoUrl ? (
+				getYoutubeId(item.videoUrl) ? (
+					<button
+						type="button"
+						class="card card-video-btn"
+						data-media-index={mediaIndex}
+						data-item-type={item.type}
+						data-item-session={item.session ?? ""}
+						aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
+					>
+						<div class="card-thumb">
+							<img
+								class="card-video-preview"
+								src={getYoutubeThumbnail(getYoutubeId(item.videoUrl)!)}
+								data-fallback={getYoutubeThumbnailFallback(getYoutubeId(item.videoUrl)!)}
+								alt=""
+								width={640}
+								height={360}
+								loading="lazy"
+								onerror="this.onerror=null;this.src=this.dataset.fallback||''"
+							/>
+							<span class="card-badge" aria-hidden="true">
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M8 5v14l11-7z" />
+								</svg>
+							</span>
+						</div>
+						<div class="card-info">
+							<p class="card-title">{item.title || "—"}</p>
+							<p class="card-type">{typeLabel}</p>
+							<p class="card-session">{sessionName}</p>
+						</div>
+					</button>
+				) : (
+					<button
+						type="button"
+						class="card card-video-btn"
+						data-media-index={mediaIndex}
+						data-item-type={item.type}
+						data-item-session={item.session ?? ""}
+						aria-label={item.title ? `Ver video: ${item.title}` : "Ver video"}
+					>
+						<div class="card-thumb">
+							<video
+								class="card-video-preview"
+								{...(item.thumbnail && !item.thumbnail.endsWith(".mp4") && !item.thumbnail.endsWith(".mov") ? { poster: item.thumbnail } : {})}
+								src={item.videoUrl}
+								muted
+								autoplay
+								loop
+								playsinline
+								webkit-playsinline="true"
+								preload="metadata"
+								aria-hidden="true"
+							></video>
+							<span class="card-badge" aria-hidden="true">
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M8 5v14l11-7z" />
+								</svg>
+							</span>
+						</div>
+						<div class="card-info">
+							<p class="card-title">{item.title || "—"}</p>
+							<p class="card-type">{typeLabel}</p>
+							<p class="card-session">{sessionName}</p>
+						</div>
+					</button>
+				)
+			) : item.type === "photo" && item.imageAsset && mediaEntry?.type === "photo" ? (
+				(() => {
+					const mod = getImageModule(item.imageAsset);
+					return mod ? (
+						<button
+							type="button"
+							class="card card-photo"
+							data-media-index={mediaIndex}
+							data-item-type={item.type}
+							data-item-session={item.session ?? ""}
+							aria-label={item.title ? `Ver ${item.title} en grande` : "Ver foto en grande"}
+						>
+							<div class="card-thumb">
+								<Image
+									src={mod}
+									alt={item.title || "Foto del portafolio"}
+									width={640}
+									height={360}
+									quality={90}
+									loading="lazy"
+									decoding="async"
+									class="card-thumb-img"
+								/>
+							</div>
+							<div class="card-info">
+								<p class="card-title">{item.title || "—"}</p>
+								<p class="card-type">{typeLabel}</p>
+								<p class="card-session">{sessionName}</p>
+							</div>
+						</button>
+					) : (
+						<div class="card card-photo card-thumb-placeholder-wrap" data-item-type={item.type} data-item-session={item.session ?? ""}>
+							<div class="card-thumb card-thumb-placeholder">Sin imagen</div>
+							<div class="card-info">
+								<p class="card-title">{item.title || "—"}</p>
+								<p class="card-type">{typeLabel}</p>
+								<p class="card-session">{sessionName}</p>
+							</div>
+						</div>
+					);
+				})()
+			) : null;
+		})}
+	</div>
 </section>
 
 <div class="media-modal" id="media-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Ver contenido">
@@ -241,48 +261,51 @@ const sessionData = await Promise.all(
 		margin-bottom: 0.25rem;
 	}
 
-	.section-subtitle.script {
-		font-family: var(--font-script);
-		font-size: 1.75rem;
-		font-weight: 700;
+	.section-subtitle {
+		font-size: 0.95rem;
 		text-align: center;
-		color: var(--accent-green);
-		margin-bottom: 3rem;
+		color: var(--text-muted);
+		margin-bottom: 2rem;
 	}
 
-	.session-block {
-		margin-bottom: 3.5rem;
+	.gallery-filters {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 2rem;
 	}
 
-	.session-title {
+	.filter-btn {
 		font-family: var(--font-body);
-		font-size: 1.1rem;
+		font-size: 0.85rem;
 		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--text-primary);
-		margin-bottom: 1.25rem;
-		padding-bottom: 0.5rem;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.session-empty {
+		letter-spacing: 0.08em;
 		color: var(--text-muted);
-		font-size: 0.95rem;
-		padding: 1rem 0;
+		background: transparent;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: color 0.2s, background 0.2s, border-color 0.2s;
 	}
 
-	.grid {
+	.filter-btn:hover {
+		color: var(--text-primary);
+		border-color: rgba(255, 255, 255, 0.4);
+	}
+
+	.filter-btn.is-active {
+		background: rgba(255, 255, 255, 0.12);
+		color: var(--text-primary);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.grid-portfolio {
 		display: grid;
-		gap: 1.5rem;
-	}
-
-	.grid-vertical {
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-	}
-
-	.grid-horizontal {
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.5rem;
 	}
 
 	.card {
@@ -292,6 +315,7 @@ const sessionData = await Promise.all(
 		overflow: hidden;
 		border: 1px solid rgba(255, 255, 255, 0.06);
 		transition: transform 0.2s, box-shadow 0.2s;
+		text-align: left;
 	}
 
 	.card:hover {
@@ -301,12 +325,8 @@ const sessionData = await Promise.all(
 
 	.card-thumb {
 		position: relative;
-		aspect-ratio: 9/16;
+		aspect-ratio: 16 / 10;
 		overflow: hidden;
-	}
-
-	.grid-horizontal .card-thumb {
-		aspect-ratio: 16/10;
 	}
 
 	.card-thumb img,
@@ -322,17 +342,47 @@ const sessionData = await Promise.all(
 		background: #000;
 	}
 
+	.card-badge {
+		position: absolute;
+		bottom: 0.5rem;
+		right: 0.5rem;
+		width: 40px;
+		height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.7);
+		border-radius: 50%;
+		color: #fff;
+	}
+
+	.card-info {
+		padding: 0.9rem 1rem;
+	}
+
 	.card-title {
-		font-size: 0.9rem;
-		font-weight: 500;
-		padding: 0.75rem 1rem;
+		font-size: 0.95rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		color: var(--text-primary);
+		margin-bottom: 0.25rem;
+	}
+
+	.card-type,
+	.card-session {
+		font-size: 0.8rem;
 		color: var(--text-muted);
+		margin: 0;
+	}
+
+	.card-session {
+		margin-top: 0.15rem;
 	}
 
 	.card-photo,
 	.card-video-btn {
 		width: 100%;
-		text-align: left;
 		cursor: pointer;
 		font: inherit;
 		color: inherit;
@@ -357,7 +407,11 @@ const sessionData = await Promise.all(
 		color: var(--text-muted);
 	}
 
-	/* Media Modal (Unified for photos and videos) */
+	.card.is-hidden {
+		display: none;
+	}
+
+	/* Media Modal */
 	.media-modal {
 		position: fixed;
 		inset: 0;
@@ -514,13 +568,22 @@ const sessionData = await Promise.all(
 	}
 
 	@media (max-width: 600px) {
-		.grid-vertical {
+		.grid-portfolio {
 			grid-template-columns: repeat(2, 1fr);
 			gap: 0.75rem;
 		}
 
-		.grid-horizontal {
-			grid-template-columns: 1fr;
+		.card-info {
+			padding: 0.6rem 0.75rem;
+		}
+
+		.card-title {
+			font-size: 0.75rem;
+		}
+
+		.card-type,
+		.card-session {
+			font-size: 0.7rem;
 		}
 
 		.media-modal {
@@ -543,9 +606,9 @@ const sessionData = await Promise.all(
 </style>
 
 <script>
-	// Unified Media Modal (for both photos and videos)
 	type MediaItem = { type: "photo" | "video"; src: string; title: string; poster?: string; isYoutube?: boolean; isShort?: boolean };
 
+	const gallerySection = document.querySelector(".gallery-section");
 	const mediaModal = document.getElementById("media-modal");
 	const mediaImg = document.querySelector("[data-media-modal-img]") as HTMLImageElement;
 	const mediaVideo = document.querySelector("[data-media-modal-video]") as HTMLVideoElement;
@@ -558,8 +621,19 @@ const sessionData = await Promise.all(
 	let mediaItems: MediaItem[] = [];
 	let currentMediaIndex = 0;
 
-	function openMediaModal(items: MediaItem[], index: number) {
-		mediaItems = items;
+	function getAllMedia(): MediaItem[] {
+		const json = gallerySection?.getAttribute("data-all-media");
+		if (!json) return [];
+		try {
+			return JSON.parse(json) as MediaItem[];
+		} catch {
+			return [];
+		}
+	}
+
+	function openMediaModal(index: number) {
+		mediaItems = getAllMedia();
+		if (index < 0 || index >= mediaItems.length) return;
 		currentMediaIndex = index;
 		updateMedia();
 		if (mediaModal) {
@@ -591,7 +665,6 @@ const sessionData = await Promise.all(
 		if (!mediaItems.length || !mediaModal) return;
 		const item = mediaItems[currentMediaIndex];
 
-		// Remove previous type classes
 		mediaModal.classList.remove("show-image", "show-video", "show-youtube", "show-youtube-short");
 
 		if (item.type === "photo") {
@@ -636,15 +709,31 @@ const sessionData = await Promise.all(
 		updateMedia();
 	}
 
-	// Attach click handlers to all media cards
+	// Filtro por sesión
+	let currentSessionFilter = "all";
+
+	function applyFilters() {
+		document.querySelectorAll(".gallery-section .card").forEach((card) => {
+			const session = card.getAttribute("data-item-session") ?? "";
+			const show = currentSessionFilter === "all" || session === currentSessionFilter;
+			card.classList.toggle("is-hidden", !show);
+		});
+	}
+
+	document.querySelectorAll(".gallery-filters .filter-btn").forEach((btn) => {
+		btn.addEventListener("click", () => {
+			currentSessionFilter = btn.getAttribute("data-session-filter") ?? "all";
+			document.querySelectorAll(".gallery-filters .filter-btn").forEach((b) => b.classList.remove("is-active"));
+			btn.classList.add("is-active");
+			applyFilters();
+		});
+	});
+
+	// Card click -> open modal
 	document.querySelectorAll(".card-photo, .card-video-btn").forEach((btn) => {
 		btn.addEventListener("click", () => {
-			const sessionBlock = btn.closest(".session-block");
-			const mediaJson = sessionBlock?.getAttribute("data-media");
-			if (!mediaJson) return;
-			const mediaList = JSON.parse(mediaJson) as MediaItem[];
 			const index = parseInt(btn.getAttribute("data-media-index") ?? "0", 10);
-			openMediaModal(mediaList, index);
+			openMediaModal(index);
 		});
 	});
 
@@ -662,19 +751,12 @@ const sessionData = await Promise.all(
 		if (e.key === "ArrowRight" && mediaModal?.classList.contains("is-open")) goNext();
 	});
 
-	// Autoplay native videos in cards when they enter viewport (skip YouTube thumbnails)
 	const videoPreviewElements = document.querySelectorAll("video.card-video-preview");
-
-	// Helper function for Safari compatibility
 	function playVideo(video: HTMLVideoElement) {
-		// Ensure muted is set (Safari requirement)
 		video.muted = true;
-		
-		// Check if video has enough data to play
 		if (video.readyState >= 2) {
 			video.play().catch(() => {});
 		} else {
-			// Wait for video to have enough data
 			video.addEventListener("canplay", () => {
 				video.play().catch(() => {});
 			}, { once: true });
@@ -686,18 +768,12 @@ const sessionData = await Promise.all(
 			(entries) => {
 				entries.forEach((entry) => {
 					const video = entry.target as HTMLVideoElement;
-					if (entry.isIntersecting) {
-						playVideo(video);
-					} else {
-						video.pause();
-					}
+					if (entry.isIntersecting) playVideo(video);
+					else video.pause();
 				});
 			},
-			{
-				threshold: 0.5,
-			}
+			{ threshold: 0.5 }
 		);
-
 		videoPreviewElements.forEach((video) => videoObserver.observe(video));
 	}
 </script>

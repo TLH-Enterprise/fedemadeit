@@ -1,0 +1,245 @@
+---
+import type { MediaItem } from "../data/portfolio";
+import { Image, getImage } from "astro:assets";
+
+interface Props {
+	items: MediaItem[];
+}
+
+const { items } = Astro.props;
+
+const imageModules = import.meta.glob<{ default: import("astro").ImageMetadata }>(
+	"../assets/portfolio/**/*.webp",
+	{ eager: true }
+);
+
+function getImageModule(assetKey: string) {
+	const key = Object.keys(imageModules).find(
+		(k) => k.replace(/^\.\.\/assets\/portfolio\//, "").replace(/\\/g, "/") === assetKey
+	);
+	return key ? (imageModules[key] as { default: import("astro").ImageMetadata }).default : undefined;
+}
+
+function getYoutubeId(url: string): string | null {
+	if (!url || typeof url !== "string") return null;
+	const m = url.trim().match(/(?:youtube\.com\/watch\?v=|youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+	return m ? m[1] : null;
+}
+function getYoutubeThumbnail(id: string) {
+	return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+}
+function getYoutubeThumbnailFallback(id: string) {
+	return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+}
+function getYoutubeEmbedUrl(id: string, autoplay = true) {
+	return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1`;
+}
+
+interface FeaturedCard {
+	item: MediaItem;
+	thumbSrc: string | null;
+	thumbFallback: string | null;
+	isVideo: boolean;
+	/** YouTube video ID, si aplica */
+	ytId: string | null;
+	/** URL directa del video (mp4, etc.), si aplica */
+	videoSrc: string | null;
+}
+
+const cards: FeaturedCard[] = [];
+
+for (const item of items) {
+	let thumbSrc: string | null = null;
+	let thumbFallback: string | null = null;
+	let isVideo = false;
+	let ytId: string | null = null;
+	let videoSrc: string | null = null;
+	if (item.type === "photo" && item.imageAsset) {
+		const mod = getImageModule(item.imageAsset);
+		if (mod) {
+			const { src } = await getImage({ src: mod, width: 800, quality: 90 });
+			thumbSrc = src;
+		}
+	} else if (item.type === "video" && item.videoUrl) {
+		const id = getYoutubeId(item.videoUrl);
+		if (id) {
+			ytId = id;
+			thumbSrc = getYoutubeThumbnail(id);
+			thumbFallback = getYoutubeThumbnailFallback(id);
+			isVideo = true;
+		} else {
+			videoSrc = item.videoUrl;
+			thumbSrc = item.thumbnail ?? null;
+			isVideo = true;
+		}
+	}
+	cards.push({ item, thumbSrc, thumbFallback, isVideo, ytId, videoSrc });
+}
+---
+
+<section class="featured-portfolio" id="galeria">
+	<div class="featured-portfolio-inner">
+		<a href="/portfolio" class="featured-portfolio-btn">Ver portfolio</a>
+		<div class="featured-portfolio-grid">
+			{cards.map(({ item, thumbSrc, thumbFallback, isVideo, ytId, videoSrc }) => (
+				<div class="featured-card">
+					<div class="featured-card-thumb">
+						{isVideo && ytId ? (
+							<iframe
+								class="featured-card-video featured-card-iframe"
+								title={item.title || "Video destacado"}
+								src={getYoutubeEmbedUrl(ytId)}
+								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+								allowfullscreen
+							></iframe>
+						) : isVideo && videoSrc ? (
+							<video
+								class="featured-card-video"
+								src={videoSrc}
+								poster={thumbSrc ?? undefined}
+								autoplay
+								muted
+								loop
+								playsinline
+								webkit-playsinline="true"
+							></video>
+						) : thumbSrc ? (
+							<img
+								src={thumbSrc}
+								alt=""
+								width={640}
+								height={400}
+								loading="lazy"
+								class="featured-card-img"
+								data-fallback={thumbFallback ?? undefined}
+								onerror="this.onerror=null;this.src=this.dataset.fallback||''"
+							/>
+						) : (
+							<div class="featured-card-placeholder">Sin imagen</div>
+						)}
+					</div>
+					<p class="featured-card-title">{item.title || "—"}</p>
+				</div>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.featured-portfolio {
+		background: var(--bg-dark);
+		padding: 4rem 1.5rem 4rem;
+	}
+
+	.featured-portfolio-inner {
+		max-width: 1100px;
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2.5rem;
+	}
+
+	.featured-portfolio-btn {
+		font-family: var(--font-body);
+		font-size: 0.9rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.2em;
+		color: var(--text-primary);
+		background: transparent;
+		border: 2px solid rgba(255, 255, 255, 0.9);
+		padding: 0.75rem 1.75rem;
+		text-decoration: none;
+		transition: background 0.2s, color 0.2s;
+	}
+
+	.featured-portfolio-btn:hover {
+		background: rgba(255, 255, 255, 0.12);
+		color: var(--text-primary);
+	}
+
+	.featured-portfolio-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1.5rem;
+		width: 100%;
+	}
+
+	.featured-card {
+		display: block;
+		color: inherit;
+		background: var(--bg-card);
+		border-radius: 8px;
+		overflow: hidden;
+		border: 1px solid rgba(255, 255, 255, 0.06);
+	}
+
+	.featured-card-thumb {
+		position: relative;
+		aspect-ratio: 16 / 10;
+		overflow: hidden;
+		background: var(--bg-dark);
+	}
+
+	.featured-card-img,
+	.featured-card-video {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	.featured-card-iframe {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		border: none;
+		pointer-events: none;
+	}
+
+	.featured-card-placeholder {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-muted);
+		font-size: 0.9rem;
+	}
+
+	.featured-card-badge {
+		position: absolute;
+		bottom: 0.5rem;
+		right: 0.5rem;
+		width: 40px;
+		height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.7);
+		border-radius: 50%;
+		color: #fff;
+	}
+
+	.featured-card-title {
+		font-family: var(--font-body);
+		font-size: 0.95rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		color: var(--text-primary);
+		padding: 1rem;
+		margin: 0;
+	}
+
+	@media (max-width: 768px) {
+		.featured-portfolio-grid {
+			grid-template-columns: 1fr;
+			max-width: 400px;
+			margin: 0 auto;
+		}
+	}
+</style>

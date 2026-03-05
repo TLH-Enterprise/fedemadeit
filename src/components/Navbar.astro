@@ -15,23 +15,17 @@ const { sessions, logoImage = "/fedemadeit.webp" } = Astro.props;
 			<img src={logoImage} alt="Fede Made It - Inicio" class="logo-img" width="140" height="40" loading="eager" />
 		</a>
 		<ul class="nav-links">
-			<li class="nav-item dropdown">
-				<button type="button" class="nav-btn" aria-expanded="false" aria-haspopup="true" aria-label="Abrir menú de sesiones" data-dropdown-trigger>
-					Sesiones
-				</button>
-				<ul class="dropdown-menu" aria-hidden="true" aria-label="Sesiones del portafolio">
-					{sessions.map((session) => (
-						<li>
-							<a href={`#sesion-${session.id}`} aria-label={`Ir a sección ${session.name}`}>{session.name}</a>
-						</li>
-					))}
-				</ul>
+			<li class="nav-item">
+				<a href="/" class="nav-btn" aria-label="Inicio">Inicio</a>
 			</li>
 			<li class="nav-item">
-				<a href="#galeria" class="nav-btn" aria-label="Ir a galería">Galería</a>
+				<a href="/portfolio" class="nav-btn" aria-label="Ir a portfolio">Portfolio</a>
 			</li>
 			<li class="nav-item">
-				<a href="#contacto" class="nav-btn" aria-label="Ir a contacto">Contacto</a>
+				<a href="/sobre-mi" class="nav-btn" aria-label="Ir a sobre mí">Sobre mí</a>
+			</li>
+			<li class="nav-item">
+				<a href="/#contacto" class="nav-btn" aria-label="Ir a contacto">Contacto</a>
 			</li>
 		</ul>
 		<button type="button" class="nav-toggle" aria-label="Abrir menú de navegación" data-nav-toggle>
@@ -101,29 +95,30 @@ const { sessions, logoImage = "/fedemadeit.webp" } = Astro.props;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		background: var(--accent-blue);
-		color: var(--bg-dark);
+		background: transparent;
+		color: #ffffff;
 		padding: 0.45rem 0.9rem;
 		border-radius: 6px;
-		border: none;
+		border: 1px solid rgba(255, 255, 255, 0.35);
 		cursor: pointer;
-		transition: transform 0.2s, box-shadow 0.2s;
+		transition: background 0.2s, border-color 0.2s, color 0.2s;
 	}
 
 	.nav-btn:hover {
-		transform: scale(1.02);
-		box-shadow: 0 0 16px rgba(79, 195, 247, 0.35);
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.6);
+		color: #ffffff;
 	}
 
 	.nav-btn-outline {
 		background: transparent;
-		color: var(--accent-blue);
-		border: 2px solid var(--accent-blue);
+		color: #ffffff;
+		border: 2px solid rgba(255, 255, 255, 0.5);
 	}
 
 	.nav-btn-outline:hover {
-		background: var(--accent-blue);
-		color: var(--bg-dark);
+		background: rgba(255, 255, 255, 0.12);
+		color: #ffffff;
 	}
 
 	.dropdown-menu {
@@ -160,8 +155,8 @@ const { sessions, logoImage = "/fedemadeit.webp" } = Astro.props;
 	}
 
 	.dropdown-menu a:hover {
-		background: var(--accent-blue);
-		color: var(--bg-dark);
+		background: rgba(255, 255, 255, 0.12);
+		color: #ffffff;
 	}
 
 	.nav-toggle {

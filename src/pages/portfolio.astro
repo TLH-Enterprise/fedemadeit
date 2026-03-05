@@ -1,0 +1,13 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Gallery from "../components/Gallery.astro";
+import { sessions, portfolioItems } from "../data/portfolio";
+---
+
+<Layout title="Portfolio | Fede Made It" description="Portafolio completo - Videografía, fotografía y edición">
+	<Navbar sessions={sessions} />
+	<main>
+		<Gallery items={portfolioItems} sessions={sessions} />
+	</main>
+</Layout>

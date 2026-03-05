@@ -1,0 +1,181 @@
+---
+import type { Client } from "../data/clients";
+
+interface Props {
+	clients: Client[];
+	/** Título pequeño sobre el título principal (ej. "TRABAJOS") */
+	label?: string;
+	/** Título principal (ej. "CLIENTES") */
+	title?: string;
+	/** Subtítulo debajo del título */
+	subtitle?: string;
+}
+
+const { clients, label = "Trabajos", title = "Clientes", subtitle = "Algunos proyectos con marcas y personas." } = Astro.props;
+// Duplicamos la lista para loop infinito sin corte
+const clientsDoubled = [...clients, ...clients];
+---
+
+<section class="clients-section" id="clientes">
+	<div class="clients-wrap">
+		<div class="clients-header">
+			{label && <p class="clients-label">{label}</p>}
+			<h2 class="clients-title">{title}</h2>
+			<p class="clients-subtitle">{subtitle}</p>
+		</div>
+		<div class="clients-carousel-wrap">
+			<div class="clients-track" aria-label="Carrusel de clientes en movimiento">
+				{clientsDoubled.map((client, i) => (
+					<span class="clients-carousel-group">
+						{i > 0 ? <span class="clients-dot" aria-hidden="true"></span> : null}
+						<div class="clients-item">
+							{client.logo ? (
+								<div class="clients-logo-wrap">
+									<img src={client.logo} alt="" class="clients-logo" width="64" height="64" loading="lazy" />
+								</div>
+							) : null}
+							<span class="clients-name">{client.name}</span>
+						</div>
+					</span>
+				))}
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.clients-section {
+		background: var(--bg-dark);
+		padding: 4rem 1.5rem 4rem;
+	}
+
+	.clients-wrap {
+		max-width: 1200px;
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 2rem;
+		align-items: start;
+	}
+
+	.clients-label {
+		font-family: var(--font-body);
+		font-size: 0.8rem;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		color: var(--text-muted);
+		margin-bottom: 0.25rem;
+	}
+
+	.clients-title {
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 5vw, 3rem);
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: var(--text-primary);
+		margin-bottom: 0.5rem;
+	}
+
+	.clients-subtitle {
+		font-size: 0.95rem;
+		color: var(--text-muted);
+		margin: 0;
+		max-width: 320px;
+	}
+
+	.clients-carousel-wrap {
+		overflow: hidden;
+		width: 100%;
+	}
+
+	.clients-track {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: max-content;
+		animation: clients-scroll 40s linear infinite;
+	}
+
+	.clients-track:hover {
+		animation-play-state: paused;
+	}
+
+	@keyframes clients-scroll {
+		0% {
+			transform: translateX(0);
+		}
+		100% {
+			transform: translateX(-50%);
+		}
+	}
+
+	.clients-carousel-group {
+		display: contents;
+	}
+
+	.clients-dot {
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		background: var(--text-muted);
+		opacity: 0.6;
+		flex-shrink: 0;
+	}
+
+	.clients-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex-shrink: 0;
+		padding: 0.5rem 0;
+	}
+
+	.clients-logo-wrap {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.08);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.clients-logo {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		padding: 6px;
+		filter: brightness(0) invert(1);
+		opacity: 0.9;
+	}
+
+	.clients-name {
+		font-family: var(--font-body);
+		font-size: 0.9rem;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-primary);
+		white-space: nowrap;
+	}
+
+	@media (min-width: 768px) {
+		.clients-wrap {
+			grid-template-columns: minmax(200px, 280px) 1fr;
+			gap: 3rem;
+			align-items: center;
+		}
+
+		.clients-logo-wrap {
+			width: 56px;
+			height: 56px;
+		}
+
+		.clients-name {
+			font-size: 1rem;
+		}
+	}
+</style>
