@@ -28,11 +28,6 @@ const { sessions, logoImage = "/fedemadeit.webp" } = Astro.props;
 				<a href="/#contacto" class="nav-btn" aria-label="Ir a contacto">Contacto</a>
 			</li>
 		</ul>
-		<button type="button" class="nav-toggle" aria-label="Abrir menú de navegación" data-nav-toggle>
-			<span aria-hidden="true"></span>
-			<span aria-hidden="true"></span>
-			<span aria-hidden="true"></span>
-		</button>
 	</nav>
 </header>
 
@@ -159,81 +154,39 @@ const { sessions, logoImage = "/fedemadeit.webp" } = Astro.props;
 		color: #ffffff;
 	}
 
-	.nav-toggle {
-		display: none;
-		flex-direction: column;
-		gap: 5px;
-		background: none;
-		border: none;
-		cursor: pointer;
-		padding: 0.5rem;
-	}
-
-	.nav-toggle span {
-		width: 24px;
-		height: 2px;
-		background: var(--text-primary);
-	}
-
 	@media (max-width: 768px) {
+		.nav-inner {
+			padding: 0.5rem 0.75rem;
+			gap: 0.4rem;
+		}
+
+		.logo-img {
+			height: 28px;
+			max-width: 100px;
+		}
+
 		.nav-links {
-			position: fixed;
-			top: 56px;
-			right: 0;
-			width: 280px;
-			height: calc(100vh - 56px);
-			background: var(--bg-card);
-			flex-direction: column;
-			align-items: stretch;
-			padding: 1rem;
-			gap: 0.5rem;
-			transform: translateX(100%);
-			transition: transform 0.3s;
-			border-left: 1px solid rgba(255, 255, 255, 0.08);
+			gap: 0.15rem;
 		}
 
-		.nav-links.is-open {
-			transform: translateX(0);
+		.nav-btn {
+			font-size: 0.6rem;
+			padding: 0.3rem 0.4rem;
+			letter-spacing: 0.02em;
+			border-width: 1px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.nav-btn {
+			font-size: 0.55rem;
+			padding: 0.28rem 0.35rem;
 		}
 
-		.dropdown-menu {
-			position: static;
-			opacity: 1;
-			visibility: visible;
-			transform: none;
-			margin-top: 0.5rem;
-			margin-left: 0.5rem;
-			display: none;
-		}
-
-		.nav-item.dropdown.is-open .dropdown-menu {
-			display: block;
-		}
-
-		.nav-toggle {
-			display: flex;
+		.logo-img {
+			height: 24px;
+			max-width: 80px;
 		}
 	}
 </style>
 
-<script>
-	const toggle = document.querySelector("[data-nav-toggle]");
-	const links = document.querySelector(".nav-links");
-	const dropdownTrigger = document.querySelector("[data-dropdown-trigger]");
-	const dropdown = document.querySelector(".nav-item.dropdown");
-
-	toggle?.addEventListener("click", () => {
-		links?.classList.toggle("is-open");
-	});
-
-	dropdownTrigger?.addEventListener("click", (e) => {
-		e.preventDefault();
-		dropdown?.classList.toggle("is-open");
-	});
-
-	document.addEventListener("click", (e) => {
-		if (!dropdown?.contains(e.target as Node)) {
-			dropdown?.classList.remove("is-open");
-		}
-	});
-</script>
