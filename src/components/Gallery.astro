@@ -94,17 +94,56 @@ for (const item of items) {
 		allMedia.push(mediaEntry);
 	}
 }
+
+const sessionIdsWithPhotos = new Set<string>();
+const sessionIdsWithVideos = new Set<string>();
+for (const item of items) {
+	if (!item.session) continue;
+	if (item.type === "photo") sessionIdsWithPhotos.add(item.session);
+	if (item.type === "video") sessionIdsWithVideos.add(item.session);
+}
+const sessionsForAll = sessions;
+const sessionsForPhoto = sessions.filter((s) => sessionIdsWithPhotos.has(s.id));
+const sessionsForVideo = sessions.filter((s) => sessionIdsWithVideos.has(s.id));
 ---
 
 <section class="gallery-section" id="galeria" data-all-media={JSON.stringify(allMedia)}>
 	<h2 class="section-title">Portfolio</h2>
 	<p class="section-subtitle">Una selección de trabajos por categorías.</p>
 
-	<div class="gallery-filters" role="tablist" aria-label="Filtrar por sesión">
-		<button type="button" class="filter-btn is-active" data-session-filter="all" role="tab" aria-selected="true">Todas las sesiones</button>
-		{sessions.map((session) => (
-			<button type="button" class="filter-btn" data-session-filter={session.id} role="tab" aria-selected="false">{session.name}</button>
-		))}
+	<div class="gallery-filter-bar">
+		<div class="filter-row gallery-filters-type" role="tablist" aria-label="Filtrar por tipo de trabajo">
+			<button type="button" class="filter-btn filter-btn--type is-active" data-type-filter="all" role="tab" aria-selected="true">Todo</button>
+			<button type="button" class="filter-btn filter-btn--type" data-type-filter="photo" role="tab" aria-selected="false">Foto</button>
+			<button type="button" class="filter-btn filter-btn--type" data-type-filter="video" role="tab" aria-selected="false">Video</button>
+		</div>
+
+		<div class="gallery-filters-sessions">
+			<div class="filter-row gallery-filters-session" data-session-context="all" role="tablist" aria-label="Categoría" aria-hidden="false">
+				<button type="button" class="filter-btn filter-btn--session is-active" data-session-filter="all" role="tab" aria-selected="true">Todas</button>
+				{sessionsForAll.map((session) => (
+					<button type="button" class="filter-btn filter-btn--session" data-session-filter={session.id} role="tab" aria-selected="false">
+						{session.name}
+					</button>
+				))}
+			</div>
+			<div class="filter-row gallery-filters-session is-hidden" data-session-context="photo" role="tablist" aria-label="Categoría de fotografía" aria-hidden="true">
+				<button type="button" class="filter-btn filter-btn--session is-active" data-session-filter="all" role="tab" aria-selected="true">Todas</button>
+				{sessionsForPhoto.map((session) => (
+					<button type="button" class="filter-btn filter-btn--session" data-session-filter={session.id} role="tab" aria-selected="false">
+						{session.name}
+					</button>
+				))}
+			</div>
+			<div class="filter-row gallery-filters-session is-hidden" data-session-context="video" role="tablist" aria-label="Categoría de video" aria-hidden="true">
+				<button type="button" class="filter-btn filter-btn--session is-active" data-session-filter="all" role="tab" aria-selected="true">Todas</button>
+				{sessionsForVideo.map((session) => (
+					<button type="button" class="filter-btn filter-btn--session" data-session-filter={session.id} role="tab" aria-selected="false">
+						{session.name}
+					</button>
+				))}
+			</div>
+		</div>
 	</div>
 
 	<div class="grid grid-portfolio">
@@ -268,38 +307,66 @@ for (const item of items) {
 		margin-bottom: 2rem;
 	}
 
-	.gallery-filters {
+	.gallery-filter-bar {
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+		margin-bottom: 2rem;
+		max-width: 100%;
+	}
+
+	.filter-row {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
-		gap: 0.5rem;
-		margin-bottom: 2rem;
+		align-items: center;
+		gap: 0.4rem;
+		justify-content: flex-start;
+	}
+
+	.gallery-filters-type .filter-btn {
+		font-size: 0.78rem;
+		padding: 0.45rem 0.85rem;
+	}
+
+	.gallery-filters-session .filter-btn {
+		font-size: 0.72rem;
+		padding: 0.4rem 0.7rem;
+		letter-spacing: 0.06em;
+	}
+
+	.gallery-filters-session.is-hidden {
+		display: none;
 	}
 
 	.filter-btn {
 		font-family: var(--font-body);
-		font-size: 0.85rem;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--text-muted);
 		background: transparent;
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		padding: 0.5rem 1rem;
-		border-radius: 4px;
+		border: 1px solid rgba(255, 255, 255, 0.22);
+		border-radius: 3px;
 		cursor: pointer;
 		transition: color 0.2s, background 0.2s, border-color 0.2s;
+		line-height: 1.2;
+		text-align: center;
 	}
 
 	.filter-btn:hover {
 		color: var(--text-primary);
-		border-color: rgba(255, 255, 255, 0.4);
+		border-color: rgba(255, 255, 255, 0.45);
 	}
 
 	.filter-btn.is-active {
-		background: rgba(255, 255, 255, 0.12);
 		color: var(--text-primary);
-		border-color: rgba(255, 255, 255, 0.3);
+		border-color: rgba(255, 255, 255, 0.88);
+		background: transparent;
+	}
+
+	.filter-btn:focus-visible {
+		outline: 2px solid rgba(255, 255, 255, 0.6);
+		outline-offset: 2px;
 	}
 
 	.grid-portfolio {
@@ -709,25 +776,77 @@ for (const item of items) {
 		updateMedia();
 	}
 
-	// Filtro por sesión
+	type TypeFilter = "all" | "photo" | "video";
+
+	let currentTypeFilter: TypeFilter = "all";
 	let currentSessionFilter = "all";
 
 	function applyFilters() {
 		document.querySelectorAll(".gallery-section .card").forEach((card) => {
 			const session = card.getAttribute("data-item-session") ?? "";
-			const show = currentSessionFilter === "all" || session === currentSessionFilter;
-			card.classList.toggle("is-hidden", !show);
+			const itemType = card.getAttribute("data-item-type") ?? "";
+			const sessionOk = currentSessionFilter === "all" || session === currentSessionFilter;
+			const typeOk =
+				currentTypeFilter === "all" ||
+				(currentTypeFilter === "photo" && itemType === "photo") ||
+				(currentTypeFilter === "video" && itemType === "video");
+			card.classList.toggle("is-hidden", !(sessionOk && typeOk));
 		});
 	}
 
-	document.querySelectorAll(".gallery-filters .filter-btn").forEach((btn) => {
+	function syncSessionPanels() {
+		document.querySelectorAll(".gallery-filters-session").forEach((row) => {
+			const ctx = row.getAttribute("data-session-context") as TypeFilter | "all" | null;
+			const visible = ctx === currentTypeFilter;
+			row.classList.toggle("is-hidden", !visible);
+			row.setAttribute("aria-hidden", visible ? "false" : "true");
+		});
+	}
+
+	function resetSessionSelectionInActivePanel() {
+		currentSessionFilter = "all";
+		const panel = document.querySelector(
+			`.gallery-filters-session[data-session-context="${currentTypeFilter}"]`
+		);
+		panel?.querySelectorAll(".filter-btn--session").forEach((b) => b.classList.remove("is-active"));
+		panel?.querySelector('.filter-btn--session[data-session-filter="all"]')?.classList.add("is-active");
+		panel?.querySelectorAll(".filter-btn--session").forEach((b) => {
+			b.setAttribute("aria-selected", b.classList.contains("is-active") ? "true" : "false");
+		});
+	}
+
+	document.querySelectorAll(".filter-btn--type").forEach((btn) => {
 		btn.addEventListener("click", () => {
-			currentSessionFilter = btn.getAttribute("data-session-filter") ?? "all";
-			document.querySelectorAll(".gallery-filters .filter-btn").forEach((b) => b.classList.remove("is-active"));
-			btn.classList.add("is-active");
+			const next = (btn.getAttribute("data-type-filter") ?? "all") as TypeFilter;
+			if (next === currentTypeFilter) return;
+			currentTypeFilter = next;
+			document.querySelectorAll(".filter-btn--type").forEach((b) => {
+				const active = b === btn;
+				b.classList.toggle("is-active", active);
+				b.setAttribute("aria-selected", active ? "true" : "false");
+			});
+			syncSessionPanels();
+			resetSessionSelectionInActivePanel();
 			applyFilters();
 		});
 	});
+
+	document.querySelectorAll(".filter-btn--session").forEach((btn) => {
+		btn.addEventListener("click", () => {
+			const panel = btn.closest(".gallery-filters-session");
+			if (!panel || panel.classList.contains("is-hidden")) return;
+			currentSessionFilter = btn.getAttribute("data-session-filter") ?? "all";
+			panel.querySelectorAll(".filter-btn--session").forEach((b) => {
+				const active = b === btn;
+				b.classList.toggle("is-active", active);
+				b.setAttribute("aria-selected", active ? "true" : "false");
+			});
+			applyFilters();
+		});
+	});
+
+	syncSessionPanels();
+	applyFilters();
 
 	// Card click -> open modal
 	document.querySelectorAll(".card-photo, .card-video-btn").forEach((btn) => {
