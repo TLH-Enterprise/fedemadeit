@@ -8,6 +8,7 @@ import Clients from "../components/Clients.astro";
 import { getCollection } from "astro:content";
 import { sessions, getFeaturedPortfolioItems, toMediaItem } from "../data/portfolio";
 import { clients } from "../data/clients";
+import heroData from "../data/hero.json";
 
 // Imagen de fondo del hero: camera.jpg en src/assets/hero/
 const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg,png,webp}", { eager: true });
@@ -17,13 +18,14 @@ const portfolioItems = (await getCollection("portfolio")).map(toMediaItem);
 const featuredItems = getFeaturedPortfolioItems(portfolioItems);
 ---
 
-<Layout title="Fede Made It | Portafolio de trabajo" description="Portafolio de Federico Rios - Videografía y fotografía">
+<Layout title="FedeBlow | Portafolio de trabajo" description="Portafolio de Federico Rios - Videografía y fotografía">
 	<Navbar sessions={sessions} />
 	<main>
 		<Hero
 			name="Federico Ríos"
 			subtitle="Photography — Videography — Design - AI Production"
 			backgroundImage={heroBackground}
+			backgroundVideo={heroData.video}
 		/>
 		<FeaturedPortfolio items={featuredItems} />
 		<Clients clients={clients} label="Trabajos" title="Clientes" subtitle="Algunos proyectos con marcas y personas." />

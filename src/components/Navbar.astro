@@ -6,13 +6,13 @@ interface Props {
 	logoImage?: string;
 }
 
-const { sessions, logoImage = "/fedemadeit.webp" } = Astro.props;
+const { sessions, logoImage = "/fedeblow.webp" } = Astro.props;
 ---
 
 <header class="navbar">
 	<nav class="nav-inner" aria-label="Navegación principal">
 		<a href="/" class="logo" aria-label="Inicio - Página principal">
-			<img src={logoImage} alt="Fede Made It - Inicio" class="logo-img" width="140" height="40" loading="eager" />
+			<img src={logoImage} alt="FedeBlow - Inicio" class="logo-img" width="140" height="40" loading="eager" />
 		</a>
 		<ul class="nav-links">
 			<li class="nav-item">

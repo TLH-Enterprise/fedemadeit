@@ -8,7 +8,7 @@ import { sessions, toMediaItem } from "../data/portfolio";
 const portfolioItems = (await getCollection("portfolio")).map(toMediaItem);
 ---
 
-<Layout title="Portfolio | Fede Made It" description="Portafolio completo - Videografía, fotografía y edición">
+<Layout title="Portfolio | FedeBlow" description="Portafolio completo - Videografía, fotografía y edición">
 	<Navbar sessions={sessions} />
 	<main>
 		<Gallery items={portfolioItems} sessions={sessions} />

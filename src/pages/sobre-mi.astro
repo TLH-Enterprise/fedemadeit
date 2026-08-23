@@ -9,7 +9,7 @@ const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>
 const profileImage = heroModules["../assets/hero/FedeFotoPortada.jpeg"]?.default ?? Object.values(heroModules)[0]?.default;
 ---
 
-<Layout title="Sobre mí | Fede Made It" description="Conoce a Federico Ríos - Creador audiovisual, videografía y fotografía">
+<Layout title="Sobre mí | FedeBlow" description="Conoce a Federico Ríos - Creador audiovisual, videografía y fotografía">
 	<Navbar sessions={sessions} />
 	<main class="sobre-mi">
 		<section class="sobre-mi-inner">
@@ -27,9 +27,9 @@ const profileImage = heroModules["../assets/hero/FedeFotoPortada.jpeg"]?.default
 			</div>
 			<div class="sobre-mi-text">
 				<h1 class="sobre-mi-title">Sobre mí</h1>
-				<h2 class="sobre-mi-name">Fede Made It</h2>
+				<h2 class="sobre-mi-name">FedeBlow</h2>
 				<p class="sobre-mi-p">
-					Fede Made It es un portafolio audiovisual enfocado en contar historias con una estética limpia y cinematográfica.
+					FedeBlow es un portafolio audiovisual enfocado en contar historias con una estética limpia y cinematográfica.
 				</p>
 				<p class="sobre-mi-p">
 					Apasionado por el detalle, el movimiento y la edición con intención: me gusta trabajar de forma cercana con cada cliente, entendiendo la idea y traduciéndola a contenido que se sienta moderno, auténtico y con identidad.

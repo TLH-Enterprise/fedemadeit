@@ -6,7 +6,26 @@ media:
     categories: [image]
     extensions: [webp, jpg, jpeg, png]
 
+  - name: hero-video
+    label: Video del header
+    input: public/videos
+    output: /videos
+    categories: [video]
+    extensions: [mp4, webm]
+
 content:
+  - name: hero
+    label: Header / Inicio
+    type: file
+    path: src/data/hero.json
+    fields:
+      - name: video
+        label: Video de fondo
+        description: Reemplaza el video de fondo del header de inicio. Ideal en formato MP4, no muy pesado (menos de ~25MB) para que cargue rápido.
+        type: file
+        options:
+          media: hero-video
+
   - name: portfolio
     label: Portafolio
     type: collection
