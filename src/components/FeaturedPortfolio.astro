@@ -9,13 +9,20 @@ interface Props {
 const { items } = Astro.props;
 
 const imageModules = import.meta.glob<{ default: import("astro").ImageMetadata }>(
-	"../assets/portfolio/**/*.webp",
+	"../assets/portfolio/**/*.{webp,jpg,jpeg,png}",
 	{ eager: true }
 );
 
+/** Pages CMS escribe rutas tipo "/src/assets/portfolio/<sesion>/archivo.webp";
+ * los datos antiguos usan "<sesion>/archivo.webp". Se normalizan ambas al mismo formato. */
+function normalizeAssetKey(assetKey: string) {
+	return assetKey.replace(/^.*assets\/portfolio\//, "").replace(/^\/+/, "");
+}
+
 function getImageModule(assetKey: string) {
+	const normalized = normalizeAssetKey(assetKey);
 	const key = Object.keys(imageModules).find(
-		(k) => k.replace(/^\.\.\/assets\/portfolio\//, "").replace(/\\/g, "/") === assetKey
+		(k) => k.replace(/^\.\.\/assets\/portfolio\//, "").replace(/\\/g, "/") === normalized
 	);
 	return key ? (imageModules[key] as { default: import("astro").ImageMetadata }).default : undefined;
 }

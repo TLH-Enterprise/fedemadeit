@@ -1,0 +1,68 @@
+media:
+  - name: portfolio-photos
+    label: Fotos del portafolio
+    input: src/assets/portfolio
+    output: /src/assets/portfolio
+    categories: [image]
+    extensions: [webp, jpg, jpeg, png]
+
+content:
+  - name: portfolio
+    label: Portafolio
+    type: collection
+    path: src/content/portfolio
+    filename:
+      template: "{fields.session}-{primary}"
+      field: create
+    view:
+      fields: [title, type, session]
+      primary: title
+      sort: [title, session, type]
+      search: [title]
+    fields:
+      - name: title
+        label: Título
+        type: string
+        description: Nombre corto del trabajo (ej. "Llados Fitness")
+
+      - name: type
+        label: Tipo
+        type: select
+        options:
+          values:
+            - { name: photo, label: "Foto" }
+            - { name: video, label: "Video" }
+
+      - name: session
+        label: Categoría
+        type: select
+        options:
+          values:
+            - { name: eventos-corporativos, label: "Eventos Corporativos" }
+            - { name: eventos-sociales, label: "Eventos sociales" }
+            - { name: moda-marcas, label: "Moda y marcas" }
+            - { name: djs-videos-musicales, label: "Djs y Videos Musicales" }
+            - { name: contenido-marca, label: "Contenido de marca" }
+            - { name: edicion-videos, label: "Edición de videos" }
+
+      - name: imageAsset
+        label: Foto
+        description: Solo si Tipo = Foto. Sube la imagen dentro de la subcarpeta de la categoría correspondiente.
+        type: image
+        required: false
+        options:
+          media: portfolio-photos
+
+      - name: videoUrl
+        label: Link de YouTube
+        description: Solo si Tipo = Video. Pega el link completo de YouTube (normal o Shorts).
+        type: string
+        required: false
+
+      - name: thumbnail
+        label: Miniatura del video (avanzado)
+        description: Opcional. Solo para videos que NO son de YouTube (ej. un mp4 con URL directa).
+        type: image
+        required: false
+        options:
+          media: portfolio-photos

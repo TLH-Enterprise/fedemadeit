@@ -5,12 +5,16 @@ import Hero from "../components/Hero.astro";
 import FeaturedPortfolio from "../components/FeaturedPortfolio.astro";
 import Contact from "../components/Contact.astro";
 import Clients from "../components/Clients.astro";
-import { sessions, getFeaturedPortfolioItems } from "../data/portfolio";
+import { getCollection } from "astro:content";
+import { sessions, getFeaturedPortfolioItems, toMediaItem } from "../data/portfolio";
 import { clients } from "../data/clients";
 
 // Imagen de fondo del hero: camera.jpg en src/assets/hero/
 const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg,png,webp}", { eager: true });
 const heroBackground = heroModules["../assets/hero/camera.jpg"]?.default ?? Object.values(heroModules)[0]?.default;
+
+const portfolioItems = (await getCollection("portfolio")).map(toMediaItem);
+const featuredItems = getFeaturedPortfolioItems(portfolioItems);
 ---
 
 <Layout title="Fede Made It | Portafolio de trabajo" description="Portafolio de Federico Rios - Videografía y fotografía">
@@ -21,7 +25,7 @@ const heroBackground = heroModules["../assets/hero/camera.jpg"]?.default ?? Obje
 			subtitle="Photography — Videography — Design - AI Production"
 			backgroundImage={heroBackground}
 		/>
-		<FeaturedPortfolio items={getFeaturedPortfolioItems()} />
+		<FeaturedPortfolio items={featuredItems} />
 		<Clients clients={clients} label="Trabajos" title="Clientes" subtitle="Algunos proyectos con marcas y personas." />
 		<Contact />
 	</main>

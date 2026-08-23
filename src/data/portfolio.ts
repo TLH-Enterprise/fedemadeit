@@ -1,7 +1,12 @@
 /**
  * Datos del portafolio: sesiones, videos y fotos.
- * Edita este archivo para agregar o quitar contenido.
+ *
+ * Las fotos y videos individuales del portafolio (portfolioItems) ya NO se editan aquí:
+ * viven como archivos en src/content/portfolio/, editables sin tocar código desde el
+ * panel de Pages CMS (ver .pages.yml). Este archivo solo define las categorías (sessions)
+ * y utilidades para transformar esos datos.
  */
+import type { CollectionEntry } from "astro:content";
 
 export interface MediaItem {
 	id: string;
@@ -65,224 +70,16 @@ export const programCategories: { title: string; programs: Program[] }[] = [
 /** IDs de los 3 trabajos destacados que se muestran en la home. Edita este array para cambiar cuáles aparecen. */
 export const featuredPortfolioIds: string[] = ["ec-1", "ec-2", "mm-2"];
 
-/** Videos y fotos del portafolio. session debe coincidir con el id de una sesión arriba.
- * Fotos: imageAsset = ruta WebP en src/assets/portfolio/.
- * Videos: videoUrl = URL directa (MP4, etc.) o URL de YouTube (watch?v=ID o youtu.be/ID). thumbnail = poster opcional. */
-export const portfolioItems: MediaItem[] = [
-	{
-		id: "ec-1",
-		title: "Llados Fitness",
-		imageAsset: "eventos-corporativos/1.webp",
-		type: "photo",
-		session: "eventos-corporativos",
-	},
-	{
-		id: "ec-2",
-		title: "Santiago Ospina - XHobbies",
-		imageAsset: "eventos-corporativos/2.webp",
-		type: "photo",
-		session: "eventos-corporativos",
-	},
-	{
-		id: "ec-3",
-		title: "Feria Effix",
-		imageAsset: "eventos-corporativos/3.webp",
-		type: "photo",
-		session: "eventos-corporativos",
-	},
-	{
-		id: "ec-4",
-		title: "Feria Effix",
-		imageAsset: "eventos-corporativos/4.webp",
-		type: "photo",
-		session: "eventos-corporativos",
-	},
-	{
-		id: "es-1",
-		title: "Seniors Prom",
-		imageAsset: "eventos-sociales/1.webp",
-		type: "photo",
-		session: "eventos-sociales",
-	},
-	{
-		id: "es-2",
-		title: "Seniors Prom",
-		imageAsset: "eventos-sociales/2.webp",
-		type: "photo",
-		session: "eventos-sociales",
-	},
-	{
-		id: "es-3",
-		title: "Seniors Prom",
-		imageAsset: "eventos-sociales/3.webp",
-		type: "photo",
-		session: "eventos-sociales",
-	},
-	{
-		id: "es-4",
-		title: "Seniors Prom",
-		imageAsset: "eventos-sociales/4.webp",
-		type: "photo",
-		session: "eventos-sociales",
-	},
-	{
-		id: "es-5",
-		title: "Seniors Prom",
-		imageAsset: "eventos-sociales/5.webp",
-		type: "photo",
-		session: "eventos-sociales",
-	},
-	{
-		id: "mm-1",
-		title: "Oleo Lingerie | Ropa interior y de playa",
-		videoUrl: "https://www.youtube.com/watch?v=nAhoMgAsMGg",
-		type: "video",
-		session: "moda-marcas",
-	},
-	{
-		id: "mm-2",
-		title: "Rich Clothing | Streetwear Designs",
-		videoUrl: "https://www.youtube.com/shorts/NcosydxdVHk",
-		type: "video",
-		session: "moda-marcas",
-	},
-	{
-		id: "mm-3",
-		title: "Isa Núñez | Vestidos de baño | Ropa de playa",
-		videoUrl: "https://www.youtube.com/watch?v=qmwOSbG0s7k",
-		type: "video",
-		session: "moda-marcas",
-	},
-	{
-		id: "mm-4",
-		title: "Monkeys United",
-		videoUrl: "https://www.youtube.com/shorts/5tM1jA-_Z88",
-		type: "video",
-		session: "moda-marcas",
-	},
-	{
-		id: "mm-5",
-		title: "Rich Clothing | Streetwear Designs",
-		imageAsset: "modas-marcas/1.webp",
-		type: "photo",
-		session: "moda-marcas",
-	},
-	{
-		id: "mm-6",
-		title: "Rich Clothing | Streetwear Designs",
-		imageAsset: "modas-marcas/2.webp",
-		type: "photo",
-		session: "moda-marcas",
-	},
-	{
-		id: "mm-7",
-		title: "Rich Clothing | Streetwear Designs",
-		imageAsset: "modas-marcas/3.webp",
-		type: "photo",
-		session: "moda-marcas",
-	},
-	{
-		id: "mm-8",
-		title: "Rich Clothing | Streetwear Designs",
-		imageAsset: "modas-marcas/4.webp",
-		type: "photo",
-		session: "moda-marcas",
-	},
-	{
-		id: "dj-1",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/1.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "dj-2",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/2.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "dj-3",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/3.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "dj-4",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/4.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "dj-5",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/5.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "dj-6",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/6.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "dj-7",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/7.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "dj-8",
-		title: "Djs y Videos Musicales",
-		imageAsset: "dj-videos-musicales/8.webp",
-		type: "photo",
-		session: "djs-videos-musicales",
-	},
-	{
-		id: "cm-1",
-		title: "Lava Express",
-		videoUrl: "https://www.youtube.com/shorts/FETLrvFdYBA",
-		type: "video",
-		session: "contenido-marca",
-	},
-	{
-		id: "cm-2",
-		title: "Servi Express",
-		videoUrl: "https://www.youtube.com/shorts/ffP9fjh5a7w",
-		type: "video",
-		session: "contenido-marca",
-	},
-	{
-		id: "cm-3",
-		title: "Choris Grill Amor y Amistad",
-		videoUrl: "https://www.youtube.com/shorts/WVJsHPr_42k",
-		type: "video",
-		session: "contenido-marca",
-	},
-	{
-		id: "ev-1",
-		title: "Rich Clothing | Streetwear Designs de videos",
-		videoUrl: "https://www.youtube.com/shorts/4nfcN3fQB9U",
-		type: "video",
-		session: "edicion-videos",
-	},
-	{
-		id: "ev-2",
-		title: "Urban Company Studios Miami",
-		videoUrl: "https://www.youtube.com/shorts/Hss23LoFGeg",
-		type: "video",
-		session: "edicion-videos",
-	},
-];
+/**
+ * Convierte una entrada de la colección "portfolio" (src/content/portfolio/*.yaml,
+ * editada desde Pages CMS) al shape MediaItem que usan los componentes de la UI.
+ */
+export function toMediaItem(entry: CollectionEntry<"portfolio">): MediaItem {
+	return { id: entry.id, ...entry.data };
+}
 
 /** Devuelve los 3 items destacados en el orden definido en featuredPortfolioIds. */
-export function getFeaturedPortfolioItems(): MediaItem[] {
-	const byId = Object.fromEntries(portfolioItems.map((i) => [i.id, i]));
+export function getFeaturedPortfolioItems(items: MediaItem[]): MediaItem[] {
+	const byId = Object.fromEntries(items.map((i) => [i.id, i]));
 	return featuredPortfolioIds.map((id) => byId[id]).filter(Boolean);
 }

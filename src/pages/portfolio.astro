@@ -2,7 +2,10 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Gallery from "../components/Gallery.astro";
-import { sessions, portfolioItems } from "../data/portfolio";
+import { getCollection } from "astro:content";
+import { sessions, toMediaItem } from "../data/portfolio";
+
+const portfolioItems = (await getCollection("portfolio")).map(toMediaItem);
 ---
 
 <Layout title="Portfolio | Fede Made It" description="Portafolio completo - Videografía, fotografía y edición">
