@@ -11,6 +11,8 @@ const profileImageKey = Object.keys(heroModules).find(
 	(k) => k.replace(/^\.\.\/assets\/hero\//, "") === aboutData.image.replace(/^.*assets\/hero\//, "")
 );
 const profileImage = (profileImageKey ? heroModules[profileImageKey].default : undefined) ?? Object.values(heroModules)[0]?.default;
+
+const paragraphs = aboutData.description.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 ---
 
 <Layout title="Sobre mí | FedeBlow" description="Conoce a Federico Ríos - Creador audiovisual, videografía y fotografía">
@@ -31,16 +33,8 @@ const profileImage = (profileImageKey ? heroModules[profileImageKey].default : u
 			</div>
 			<div class="sobre-mi-text">
 				<h1 class="sobre-mi-title">Sobre mí</h1>
-				<h2 class="sobre-mi-name">FedeBlow</h2>
-				<p class="sobre-mi-p">
-					FedeBlow es un portafolio audiovisual enfocado en contar historias con una estética limpia y cinematográfica.
-				</p>
-				<p class="sobre-mi-p">
-					Apasionado por el detalle, el movimiento y la edición con intención: me gusta trabajar de forma cercana con cada cliente, entendiendo la idea y traduciéndola a contenido que se sienta moderno, auténtico y con identidad.
-				</p>
-				<p class="sobre-mi-p">
-					Mi objetivo es simple: que tu contenido se vea premium y se sienta real.
-				</p>
+				<h2 class="sobre-mi-name">{aboutData.name}</h2>
+				{paragraphs.map((p) => <p class="sobre-mi-p">{p}</p>)}
 			</div>
 		</section>
 	</main>

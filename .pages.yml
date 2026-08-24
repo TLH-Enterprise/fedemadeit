@@ -35,6 +35,13 @@ content:
         type: image
         options:
           media: profile-photo
+      - name: name
+        label: Nombre / marca
+        type: string
+      - name: description
+        label: Descripción
+        description: Deja una línea en blanco entre párrafos para que se muestren separados.
+        type: text
 
   - name: featured
     label: Destacados (Inicio)
