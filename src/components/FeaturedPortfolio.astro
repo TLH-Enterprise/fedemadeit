@@ -47,7 +47,7 @@ const cards = await Promise.all(
 				<div class="featured-card">
 					<div class="featured-card-thumb">
 						{thumbSrc ? (
-							<img src={thumbSrc} alt="" width={640} height={400} loading="lazy" class="featured-card-img" />
+							<img src={thumbSrc} alt="" width={640} height={960} loading="lazy" class="featured-card-img" />
 						) : (
 							<div class="featured-card-placeholder">Sin imagen</div>
 						)}
@@ -111,7 +111,7 @@ const cards = await Promise.all(
 
 	.featured-card-thumb {
 		position: relative;
-		aspect-ratio: 16 / 10;
+		aspect-ratio: 2 / 3;
 		overflow: hidden;
 		background: var(--bg-dark);
 	}
