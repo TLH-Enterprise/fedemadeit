@@ -7,43 +7,73 @@ interface Props {
 	subtitle?: string;
 	/** Imagen de fondo a pantalla completa (hero). Import desde src/assets/hero. Se usa como respaldo mientras carga el video, o si no hay video. */
 	backgroundImage?: ImageMetadata | string;
-	/** Video de fondo a pantalla completa (hero). Ruta pública, ej. "/videos/hero.mp4". */
-	backgroundVideo?: string;
+	/** Link de YouTube para el video de fondo del header (normal o Shorts). */
+	backgroundVideoUrl?: string;
 }
 
-const { name, subtitle, backgroundImage, backgroundVideo } = Astro.props;
+const { name, subtitle, backgroundImage, backgroundVideoUrl } = Astro.props;
+
+function getYoutubeId(url?: string): string | null {
+	if (!url || typeof url !== "string") return null;
+	const t = url.trim();
+	if (/^[a-zA-Z0-9_-]{11}$/.test(t)) return t;
+	const m = t.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+	return m ? m[1] : null;
+}
+
+const youtubeId = getYoutubeId(backgroundVideoUrl);
+const youtubeThumbnail = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : null;
+const youtubeThumbnailFallback = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null;
 ---
 
 <section class="hero" aria-label={name}>
 	<div class="hero-bg">
-		{backgroundImage && (
-			<Image
-				src={backgroundImage as ImageMetadata}
+		{youtubeThumbnail ? (
+			<img
+				src={youtubeThumbnail}
 				alt=""
 				class="hero-bg-img"
 				width={1920}
 				height={1080}
-				quality={85}
 				loading="eager"
 				fetchpriority="high"
+				data-fallback={youtubeThumbnailFallback}
+				onerror="this.onerror=null;this.src=this.dataset.fallback"
 			/>
+		) : (
+			backgroundImage && (
+				<Image
+					src={backgroundImage as ImageMetadata}
+					alt=""
+					class="hero-bg-img"
+					width={1920}
+					height={1080}
+					quality={85}
+					loading="eager"
+					fetchpriority="high"
+				/>
+			)
 		)}
-		{backgroundVideo && (
-			<video
-				class="hero-bg-video"
-				src={backgroundVideo}
-				autoplay
-				muted
-				loop
-				playsinline
-				webkit-playsinline="true"
-				preload="auto"
-				aria-hidden="true"
-			></video>
+		{youtubeId && (
+			<div class="hero-bg-video-wrap" aria-hidden="true">
+				<div id="hero-yt-player"></div>
+			</div>
 		)}
 		<div class="hero-overlay" aria-hidden="true"></div>
 	</div>
 	<h1 class="hero-name-sr-only">{name}</h1>
+	{youtubeId && (
+		<button type="button" class="hero-mute-btn is-muted" aria-pressed="false" aria-label="Activar sonido">
+			<svg class="hero-mute-icon icon-muted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+				<path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor" />
+				<path d="M16.5 8.5l4 4m0-4l-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+			</svg>
+			<svg class="hero-mute-icon icon-unmuted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+				<path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor" />
+				<path d="M16 8.5a5 5 0 010 7m2.5-9.5a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+			</svg>
+		</button>
+	)}
 	<div class="hero-bottom">
 		{subtitle && <p class="hero-subtitle">{subtitle}</p>}
 		<div class="hero-scroll" aria-hidden="true">
@@ -51,6 +81,102 @@ const { name, subtitle, backgroundImage, backgroundVideo } = Astro.props;
 		</div>
 	</div>
 </section>
+
+{youtubeId && (
+	<script define:vars={{ youtubeId }}>
+		(function () {
+			let player = null;
+
+			function disableCaptions(target) {
+				try {
+					if (typeof target.getOptions === "function" && target.getOptions("captions").length) {
+						target.setOption("captions", "track", {});
+					}
+				} catch (err) {
+					// Ignorar: el módulo de captions puede no estar listo todavía.
+				}
+			}
+
+			function createPlayer() {
+				player = new window.YT.Player("hero-yt-player", {
+					videoId: youtubeId,
+					playerVars: {
+						autoplay: 1,
+						mute: 1,
+						loop: 1,
+						playlist: youtubeId,
+						controls: 0,
+						disablekb: 1,
+						fs: 0,
+						iv_load_policy: 3,
+						cc_load_policy: 0,
+						modestbranding: 1,
+						playsinline: 1,
+						rel: 0,
+						showinfo: 0,
+					},
+					events: {
+						onReady: (e) => {
+							e.target.mute();
+							e.target.playVideo();
+							disableCaptions(e.target);
+							syncButton();
+						},
+						onStateChange: (e) => {
+							if (e.data === window.YT.PlayerState.PLAYING) {
+								document.querySelector(".hero-bg-video-wrap")?.classList.add("is-playing");
+							}
+							disableCaptions(e.target);
+						},
+						onApiChange: (e) => {
+							disableCaptions(e.target);
+						},
+					},
+				});
+			}
+
+			// El player de YouTube pausa el video cuando la pestaña queda oculta; lo
+			// retomamos al volver para que el loop de fondo no se quede detenido.
+			document.addEventListener("visibilitychange", () => {
+				if (document.visibilityState === "visible" && player && typeof player.playVideo === "function") {
+					player.playVideo();
+				}
+			});
+
+			function syncButton() {
+				const btn = document.querySelector(".hero-mute-btn");
+				if (!btn || !player || typeof player.isMuted !== "function") return;
+				const muted = player.isMuted();
+				btn.classList.toggle("is-muted", muted);
+				btn.setAttribute("aria-pressed", String(!muted));
+				btn.setAttribute("aria-label", muted ? "Activar sonido" : "Silenciar video");
+			}
+
+			document.querySelector(".hero-mute-btn")?.addEventListener("click", () => {
+				if (!player || typeof player.isMuted !== "function") return;
+				if (player.isMuted()) {
+					player.unMute();
+				} else {
+					player.mute();
+				}
+				syncButton();
+			});
+
+			if (window.YT && window.YT.Player) {
+				createPlayer();
+			} else {
+				const tag = document.createElement("script");
+				tag.src = "https://www.youtube.com/iframe_api";
+				document.head.appendChild(tag);
+				const prevCallback = window.onYouTubeIframeAPIReady;
+				window.onYouTubeIframeAPIReady = () => {
+					prevCallback?.();
+					createPlayer();
+				};
+			}
+		})();
+	</script>
+)}
 
 <style>
 	.hero {
@@ -70,13 +196,38 @@ const { name, subtitle, backgroundImage, backgroundVideo } = Astro.props;
 		z-index: 0;
 	}
 
-	.hero-bg-img,
-	.hero-bg-video {
+	.hero-bg-img {
 		position: absolute;
 		inset: 0;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+
+	.hero-bg-video-wrap {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		opacity: 0;
+		transition: opacity 0.6s ease;
+		pointer-events: none;
+	}
+
+	.hero-bg-video-wrap.is-playing {
+		opacity: 1;
+	}
+
+	.hero-bg-video-wrap :global(iframe) {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 100vw;
+		height: 56.25vw; /* 16 / 9 */
+		min-height: 100vh;
+		min-width: 177.78vh; /* 16 / 9 */
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+		border: none;
 	}
 
 	.hero-overlay {
@@ -101,6 +252,46 @@ const { name, subtitle, backgroundImage, backgroundVideo } = Astro.props;
 		clip: rect(0, 0, 0, 0);
 		white-space: nowrap;
 		border: 0;
+	}
+
+	.hero-mute-btn {
+		position: absolute;
+		z-index: 2;
+		top: 5.5rem;
+		right: 1.5rem;
+		width: 44px;
+		height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.4);
+		border: 1.5px solid rgba(255, 255, 255, 0.7);
+		border-radius: 50%;
+		color: var(--text-primary, #fff);
+		cursor: pointer;
+		transition: background 0.2s, border-color 0.2s;
+	}
+
+	.hero-mute-btn:hover {
+		background: rgba(0, 0, 0, 0.6);
+		border-color: #fff;
+	}
+
+	.hero-mute-icon {
+		width: 20px;
+		height: 20px;
+	}
+
+	.icon-unmuted {
+		display: none;
+	}
+
+	.hero-mute-btn:not(.is-muted) .icon-muted {
+		display: none;
+	}
+
+	.hero-mute-btn:not(.is-muted) .icon-unmuted {
+		display: block;
 	}
 
 	.hero-bottom {

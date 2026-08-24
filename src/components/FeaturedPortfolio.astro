@@ -1,9 +1,13 @@
 ---
-import type { MediaItem } from "../data/portfolio";
-import { Image, getImage } from "astro:assets";
+import { getImage } from "astro:assets";
+
+interface FeaturedItem {
+	title: string;
+	image: string;
+}
 
 interface Props {
-	items: MediaItem[];
+	items: FeaturedItem[];
 }
 
 const { items } = Astro.props;
@@ -13,8 +17,7 @@ const imageModules = import.meta.glob<{ default: import("astro").ImageMetadata }
 	{ eager: true }
 );
 
-/** Pages CMS escribe rutas tipo "/src/assets/portfolio/<sesion>/archivo.webp";
- * los datos antiguos usan "<sesion>/archivo.webp". Se normalizan ambas al mismo formato. */
+/** Pages CMS escribe rutas tipo "/src/assets/portfolio/<sesion>/archivo.webp". */
 function normalizeAssetKey(assetKey: string) {
 	return assetKey.replace(/^.*assets\/portfolio\//, "").replace(/^\/+/, "");
 }
@@ -27,105 +30,29 @@ function getImageModule(assetKey: string) {
 	return key ? (imageModules[key] as { default: import("astro").ImageMetadata }).default : undefined;
 }
 
-function getYoutubeId(url: string): string | null {
-	if (!url || typeof url !== "string") return null;
-	const m = url.trim().match(/(?:youtube\.com\/watch\?v=|youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
-	return m ? m[1] : null;
-}
-function getYoutubeThumbnail(id: string) {
-	return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
-}
-function getYoutubeThumbnailFallback(id: string) {
-	return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-}
-function getYoutubeEmbedUrl(id: string, autoplay = true) {
-	return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1`;
-}
-
-interface FeaturedCard {
-	item: MediaItem;
-	thumbSrc: string | null;
-	thumbFallback: string | null;
-	isVideo: boolean;
-	/** YouTube video ID, si aplica */
-	ytId: string | null;
-	/** URL directa del video (mp4, etc.), si aplica */
-	videoSrc: string | null;
-}
-
-const cards: FeaturedCard[] = [];
-
-for (const item of items) {
-	let thumbSrc: string | null = null;
-	let thumbFallback: string | null = null;
-	let isVideo = false;
-	let ytId: string | null = null;
-	let videoSrc: string | null = null;
-	if (item.type === "photo" && item.imageAsset) {
-		const mod = getImageModule(item.imageAsset);
-		if (mod) {
-			const { src } = await getImage({ src: mod, width: 800, quality: 90 });
-			thumbSrc = src;
-		}
-	} else if (item.type === "video" && item.videoUrl) {
-		const id = getYoutubeId(item.videoUrl);
-		if (id) {
-			ytId = id;
-			thumbSrc = getYoutubeThumbnail(id);
-			thumbFallback = getYoutubeThumbnailFallback(id);
-			isVideo = true;
-		} else {
-			videoSrc = item.videoUrl;
-			thumbSrc = item.thumbnail ?? null;
-			isVideo = true;
-		}
-	}
-	cards.push({ item, thumbSrc, thumbFallback, isVideo, ytId, videoSrc });
-}
+const cards = await Promise.all(
+	items.map(async (item) => {
+		const mod = item.image ? getImageModule(item.image) : undefined;
+		const thumbSrc = mod ? (await getImage({ src: mod, width: 800, quality: 90 })).src : null;
+		return { title: item.title, thumbSrc };
+	})
+);
 ---
 
 <section class="featured-portfolio" id="galeria">
 	<div class="featured-portfolio-inner">
 		<a href="/portfolio" class="featured-portfolio-btn">Ver portfolio</a>
 		<div class="featured-portfolio-grid">
-			{cards.map(({ item, thumbSrc, thumbFallback, isVideo, ytId, videoSrc }) => (
+			{cards.map(({ title, thumbSrc }) => (
 				<div class="featured-card">
 					<div class="featured-card-thumb">
-						{isVideo && ytId ? (
-							<iframe
-								class="featured-card-video featured-card-iframe"
-								title={item.title || "Video destacado"}
-								src={getYoutubeEmbedUrl(ytId)}
-								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-								allowfullscreen
-							></iframe>
-						) : isVideo && videoSrc ? (
-							<video
-								class="featured-card-video"
-								src={videoSrc}
-								poster={thumbSrc ?? undefined}
-								autoplay
-								muted
-								loop
-								playsinline
-								webkit-playsinline="true"
-							></video>
-						) : thumbSrc ? (
-							<img
-								src={thumbSrc}
-								alt=""
-								width={640}
-								height={400}
-								loading="lazy"
-								class="featured-card-img"
-								data-fallback={thumbFallback ?? undefined}
-								onerror="this.onerror=null;this.src=this.dataset.fallback||''"
-							/>
+						{thumbSrc ? (
+							<img src={thumbSrc} alt="" width={640} height={400} loading="lazy" class="featured-card-img" />
 						) : (
 							<div class="featured-card-placeholder">Sin imagen</div>
 						)}
 					</div>
-					<p class="featured-card-title">{item.title || "—"}</p>
+					<p class="featured-card-title">{title || "—"}</p>
 				</div>
 			))}
 		</div>
@@ -189,22 +116,11 @@ for (const item of items) {
 		background: var(--bg-dark);
 	}
 
-	.featured-card-img,
-	.featured-card-video {
+	.featured-card-img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 		display: block;
-	}
-
-	.featured-card-iframe {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		border: none;
-		pointer-events: none;
 	}
 
 	.featured-card-placeholder {
@@ -215,20 +131,6 @@ for (const item of items) {
 		justify-content: center;
 		color: var(--text-muted);
 		font-size: 0.9rem;
-	}
-
-	.featured-card-badge {
-		position: absolute;
-		bottom: 0.5rem;
-		right: 0.5rem;
-		width: 40px;
-		height: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.7);
-		border-radius: 50%;
-		color: #fff;
 	}
 
 	.featured-card-title {

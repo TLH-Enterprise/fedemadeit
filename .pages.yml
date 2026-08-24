@@ -6,25 +6,16 @@ media:
     categories: [image]
     extensions: [webp, jpg, jpeg, png]
 
-  - name: hero-video
-    label: Video del header
-    input: public/videos
-    output: /videos
-    categories: [video]
-    extensions: [mp4, webm]
-
 content:
   - name: hero
     label: Header / Inicio
     type: file
     path: src/data/hero.json
     fields:
-      - name: video
-        label: Video de fondo
-        description: Reemplaza el video de fondo del header de inicio. Ideal en formato MP4, no muy pesado (menos de ~25MB) para que cargue rápido.
-        type: file
-        options:
-          media: hero-video
+      - name: videoUrl
+        label: Video de fondo (YouTube)
+        description: Link completo de YouTube para el video de fondo del header. Se reproduce en loop y sin sonido por defecto; el visitante puede activar el audio con el botón del header.
+        type: string
 
   - name: featured
     label: Destacados (Inicio)
@@ -32,16 +23,23 @@ content:
     path: src/data/featured.json
     fields:
       - name: items
-        label: Trabajos destacados
-        description: Elige exactamente 3 trabajos del portafolio para mostrar en la portada, en el orden en que deben aparecer. El título mostrado se edita desde cada trabajo en "Portafolio".
-        type: reference
-        options:
-          collection: portfolio
-          multiple: true
+        label: Fotos destacadas
+        description: Sube y ordena las 3 fotos que se muestran en la portada, cada una con su título.
+        type: object
+        list:
           min: 3
           max: 3
-          value: "{name}"
-          label: "{primary} — {fields.session}"
+          collapsible:
+            summary: "{title}"
+        fields:
+          - name: title
+            label: Título
+            type: string
+          - name: image
+            label: Foto
+            type: image
+            options:
+              media: portfolio-photos
 
   - name: portfolio
     label: Portafolio

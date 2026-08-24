@@ -74,12 +74,3 @@ export const programCategories: { title: string; programs: Program[] }[] = [
 export function toMediaItem(entry: CollectionEntry<"portfolio">): MediaItem {
 	return { id: entry.id, ...entry.data };
 }
-
-/**
- * Devuelve los items destacados en el orden definido en src/data/featured.json
- * (editable desde Pages CMS: "Destacados (Inicio)").
- */
-export function getFeaturedPortfolioItems(items: MediaItem[], featuredIds: string[]): MediaItem[] {
-	const byId = Object.fromEntries(items.map((i) => [i.id, i]));
-	return featuredIds.map((id) => byId[id]).filter(Boolean);
-}
