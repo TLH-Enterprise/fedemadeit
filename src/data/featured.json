@@ -1,16 +1,16 @@
 {
-	"items": [
-		{
-			"title": "Llados Fitness",
-			"image": "/src/assets/portfolio/eventos-corporativos/1.webp"
-		},
-		{
-			"title": "Santiago Ospina - XHobbies",
-			"image": "/src/assets/portfolio/eventos-corporativos/2.webp"
-		},
-		{
-			"title": "Rich Clothing | Streetwear Designs",
-			"image": "/src/assets/portfolio/modas-marcas/4.webp"
-		}
-	]
+  "items": [
+    {
+      "title": "Nicky Jam",
+      "image": "/src/assets/portfolio/Nicky Jam - optimizada-1.jpg"
+    },
+    {
+      "title": "Westcol & Luisa Castro",
+      "image": "/src/assets/portfolio/Westcol Y Luisa.JPG.jpeg"
+    },
+    {
+      "title": "Carabin3",
+      "image": "/src/assets/portfolio/Carabine.JPG.jpeg"
+    }
+  ]
 }
