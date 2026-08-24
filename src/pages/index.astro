@@ -9,13 +9,14 @@ import { getCollection } from "astro:content";
 import { sessions, getFeaturedPortfolioItems, toMediaItem } from "../data/portfolio";
 import { clients } from "../data/clients";
 import heroData from "../data/hero.json";
+import featuredData from "../data/featured.json";
 
 // Imagen de fondo del hero: camera.jpg en src/assets/hero/
 const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg,png,webp}", { eager: true });
 const heroBackground = heroModules["../assets/hero/camera.jpg"]?.default ?? Object.values(heroModules)[0]?.default;
 
 const portfolioItems = (await getCollection("portfolio")).map(toMediaItem);
-const featuredItems = getFeaturedPortfolioItems(portfolioItems);
+const featuredItems = getFeaturedPortfolioItems(portfolioItems, featuredData.items);
 ---
 
 <Layout title="FedeBlow | Portafolio de trabajo" description="Portafolio de Federico Rios - Videografía y fotografía">
@@ -23,7 +24,7 @@ const featuredItems = getFeaturedPortfolioItems(portfolioItems);
 	<main>
 		<Hero
 			name="Federico Ríos"
-			subtitle="Photography — Videography — Design - AI Production"
+			subtitle="Photography — Videography — Design — AI Production"
 			backgroundImage={heroBackground}
 			backgroundVideo={heroData.video}
 		/>

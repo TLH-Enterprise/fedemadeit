@@ -67,9 +67,6 @@ export const programCategories: { title: string; programs: Program[] }[] = [
 	},
 ];
 
-/** IDs de los 3 trabajos destacados que se muestran en la home. Edita este array para cambiar cuáles aparecen. */
-export const featuredPortfolioIds: string[] = ["ec-1", "ec-2", "mm-2"];
-
 /**
  * Convierte una entrada de la colección "portfolio" (src/content/portfolio/*.yaml,
  * editada desde Pages CMS) al shape MediaItem que usan los componentes de la UI.
@@ -78,8 +75,11 @@ export function toMediaItem(entry: CollectionEntry<"portfolio">): MediaItem {
 	return { id: entry.id, ...entry.data };
 }
 
-/** Devuelve los 3 items destacados en el orden definido en featuredPortfolioIds. */
-export function getFeaturedPortfolioItems(items: MediaItem[]): MediaItem[] {
+/**
+ * Devuelve los items destacados en el orden definido en src/data/featured.json
+ * (editable desde Pages CMS: "Destacados (Inicio)").
+ */
+export function getFeaturedPortfolioItems(items: MediaItem[], featuredIds: string[]): MediaItem[] {
 	const byId = Object.fromEntries(items.map((i) => [i.id, i]));
-	return featuredPortfolioIds.map((id) => byId[id]).filter(Boolean);
+	return featuredIds.map((id) => byId[id]).filter(Boolean);
 }

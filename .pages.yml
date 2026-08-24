@@ -26,6 +26,23 @@ content:
         options:
           media: hero-video
 
+  - name: featured
+    label: Destacados (Inicio)
+    type: file
+    path: src/data/featured.json
+    fields:
+      - name: items
+        label: Trabajos destacados
+        description: Elige exactamente 3 trabajos del portafolio para mostrar en la portada, en el orden en que deben aparecer. El título mostrado se edita desde cada trabajo en "Portafolio".
+        type: reference
+        options:
+          collection: portfolio
+          multiple: true
+          min: 3
+          max: 3
+          value: "{name}"
+          label: "{primary} — {fields.session}"
+
   - name: portfolio
     label: Portafolio
     type: collection
