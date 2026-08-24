@@ -6,6 +6,13 @@ media:
     categories: [image]
     extensions: [webp, jpg, jpeg, png]
 
+  - name: profile-photo
+    label: Foto de perfil
+    input: src/assets/hero
+    output: /src/assets/hero
+    categories: [image]
+    extensions: [webp, jpg, jpeg, png]
+
 content:
   - name: hero
     label: Header / Inicio
@@ -16,6 +23,18 @@ content:
         label: Video de fondo (YouTube)
         description: Link completo de YouTube para el video de fondo del header. Se reproduce en loop y sin sonido por defecto; el visitante puede activar el audio con el botón del header.
         type: string
+
+  - name: about
+    label: Sobre mí
+    type: file
+    path: src/data/about.json
+    fields:
+      - name: image
+        label: Foto de perfil
+        description: Foto que se muestra en la página "Sobre mí".
+        type: image
+        options:
+          media: profile-photo
 
   - name: featured
     label: Destacados (Inicio)

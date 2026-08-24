@@ -3,10 +3,14 @@ import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import { sessions } from "../data/portfolio";
 import { Image } from "astro:assets";
+import aboutData from "../data/about.json";
 
-// Imagen de perfil (la que estaba en el index)
+// Imagen de perfil, editable desde Pages CMS ("Sobre mí")
 const heroModules = import.meta.glob<{ default: import("astro").ImageMetadata }>("../assets/hero/*.{jpeg,jpg,png,webp}", { eager: true });
-const profileImage = heroModules["../assets/hero/FedeFotoPortada.jpeg"]?.default ?? Object.values(heroModules)[0]?.default;
+const profileImageKey = Object.keys(heroModules).find(
+	(k) => k.replace(/^\.\.\/assets\/hero\//, "") === aboutData.image.replace(/^.*assets\/hero\//, "")
+);
+const profileImage = (profileImageKey ? heroModules[profileImageKey].default : undefined) ?? Object.values(heroModules)[0]?.default;
 ---
 
 <Layout title="Sobre mí | FedeBlow" description="Conoce a Federico Ríos - Creador audiovisual, videografía y fotografía">
