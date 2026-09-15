@@ -105,6 +105,7 @@ const youtubeThumbnailFallback = youtubeId ? `https://img.youtube.com/vi/${youtu
 						mute: 1,
 						loop: 1,
 						playlist: youtubeId,
+						start: 5,
 						controls: 0,
 						disablekb: 1,
 						fs: 0,
@@ -125,6 +126,10 @@ const youtubeThumbnailFallback = youtubeId ? `https://img.youtube.com/vi/${youtu
 						onStateChange: (e) => {
 							if (e.data === window.YT.PlayerState.PLAYING) {
 								document.querySelector(".hero-bg-video-wrap")?.classList.add("is-playing");
+							}
+							if (e.data === window.YT.PlayerState.ENDED) {
+								e.target.seekTo(5, true);
+								e.target.playVideo();
 							}
 							disableCaptions(e.target);
 						},
