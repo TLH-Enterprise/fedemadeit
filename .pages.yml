@@ -50,11 +50,11 @@ content:
     fields:
       - name: items
         label: Fotos destacadas
-        description: Sube y ordena las 3 fotos que se muestran en la portada, cada una con su título.
+        description: Sube y ordena las fotos que se muestran en la portada, cada una con su título.
         type: object
         list:
           min: 3
-          max: 3
+          max: 5
           collapsible:
             summary: "{title}"
         fields:

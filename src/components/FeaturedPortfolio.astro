@@ -94,8 +94,9 @@ const cards = await Promise.all(
 	}
 
 	.featured-portfolio-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
 		gap: 1.5rem;
 		width: 100%;
 	}
@@ -107,6 +108,8 @@ const cards = await Promise.all(
 		border-radius: 8px;
 		overflow: hidden;
 		border: 1px solid rgba(255, 255, 255, 0.06);
+		flex: 1 1 260px;
+		max-width: 320px;
 	}
 
 	.featured-card-thumb {
@@ -146,9 +149,13 @@ const cards = await Promise.all(
 
 	@media (max-width: 768px) {
 		.featured-portfolio-grid {
-			grid-template-columns: 1fr;
 			max-width: 400px;
 			margin: 0 auto;
+		}
+
+		.featured-card {
+			flex: 1 1 100%;
+			max-width: 100%;
 		}
 	}
 </style>
