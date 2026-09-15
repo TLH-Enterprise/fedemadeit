@@ -15,6 +15,10 @@ export const clients: Client[] = [
 	{ id: "2", name: "Dareska" },
 	{ id: "3", name: "Palmahía Records" },
 	{ id: "4", name: "Emmus" },
-	{ id: "5", name: "Rich Clothings" },
-	{ id: "6", name: "Riozz" },
+	{ id: "5", name: "Riozz" },
+	{ id: "6", name: "Rich Clothing" },
+	{ id: "7", name: "Lava Express" },
+	{ id: "8", name: "Oleo Lingerie" },
+	{ id: "9", name: "Gama Active Wear" },
+	{ id: "10", name: "Odontólogos Independientes" },
 ];
