@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
+import Contact from "../components/Contact.astro";
 import { sessions } from "../data/portfolio";
 import { Image } from "astro:assets";
 import aboutData from "../data/about.json";
@@ -38,12 +39,12 @@ const paragraphs = aboutData.description.split(/\n\s*\n/).map((p) => p.trim()).f
 			</div>
 		</section>
 	</main>
+	<Contact />
 </Layout>
 
 <style>
 	.sobre-mi {
 		background: var(--bg-dark);
-		min-height: 100vh;
 		padding: 6rem 1.5rem 4rem;
 	}
 

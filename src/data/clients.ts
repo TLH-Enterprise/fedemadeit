@@ -11,11 +11,10 @@ export interface Client {
 }
 
 export const clients: Client[] = [
-	{ id: "1", name: "Rich Clothings" },
-	{ id: "2", name: "Lava Express" },
-	{ id: "3", name: "Servi Express" },
-	{ id: "4", name: "Urban Company Studio" },
-	{ id: "5", name: "Emmus" },
-	{ id: "6", name: "Choris Grill" },
-	{ id: "7", name: "Oleo Lingerie" },
+	{ id: "1", name: "Pasabordo" },
+	{ id: "2", name: "Dareska" },
+	{ id: "3", name: "Palmahía Records" },
+	{ id: "4", name: "Emmus" },
+	{ id: "5", name: "Rich Clothings" },
+	{ id: "6", name: "Riozz" },
 ];
