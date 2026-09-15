@@ -21,4 +21,6 @@ export const clients: Client[] = [
 	{ id: "8", name: "Oleo Lingerie" },
 	{ id: "9", name: "Gama Active Wear" },
 	{ id: "10", name: "Odontólogos Independientes" },
+	{ id: "11", name: "JExclusive" },
+	{ id: "12", name: "L.A. Studio" },
 ];
